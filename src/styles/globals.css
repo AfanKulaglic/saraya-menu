@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Hide scrollbar for horizontal scrolls */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glass effect utility */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Subtle shimmer for loading */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Snap scrolling for categories */
+.snap-x-mandatory {
+  scroll-snap-type: x mandatory;
+}
+.snap-start {
+  scroll-snap-align: start;
+}
+
+/* Custom focus ring */
+input:focus, textarea:focus {
+  outline: none;
+}
+
+/* Prevent overscroll bounce on iOS */
+.overscroll-none {
+  overscroll-behavior: none;
+}
+
+/* ─── Desktop & Tablet Enhancements ───────────────────── */
+
+/* Better hover states on desktop */
+@media (hover: hover) {
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* Smooth scrolling for all elements */
+@media (min-width: 768px) {
+  * {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Desktop grid transitions */
+@media (min-width: 1024px) {
+  .grid > * {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .grid > *:hover {
+    transform: translateY(-2px);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   ADMIN DARK MODE — Scoped to .admin-dark
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Backgrounds ──────────────────────────────────────── */
+.admin-dark .bg-bg       { background-color: #0A0A0A !important; }
+.admin-dark .bg-white    { background-color: #141414 !important; }
+.admin-dark .bg-surface  { background-color: #141414 !important; }
+.admin-dark .bg-gray-50  { background-color: #111111 !important; }
+
+/* White with opacity (header backdrop) */
+.admin-dark .bg-white\/95 {
+  background-color: rgba(20, 20, 20, 0.95) !important;
+}
+
+/* Accent bg tints — slightly more visible on dark */
+.admin-dark .bg-red-50      { background-color: rgba(239, 68, 68, 0.08) !important; }
+.admin-dark .bg-green-50\/30 { background-color: rgba(34, 197, 94, 0.06) !important; }
+
+/* Hover backgrounds */
+.admin-dark .hover\:bg-bg:hover       { background-color: #111111 !important; }
+.admin-dark .hover\:bg-red-50:hover   { background-color: rgba(239, 68, 68, 0.10) !important; }
+.admin-dark .hover\:bg-gray-100:hover { background-color: #1A1A1A !important; }
+.admin-dark .hover\:bg-bg\/50:hover   { background-color: rgba(10, 10, 10, 0.5) !important; }
+
+/* Focus backgrounds */
+.admin-dark .focus\:bg-white:focus { background-color: #1A1A1A !important; }
+
+/* ── Text ─────────────────────────────────────────────── */
+.admin-dark .text-dark  { color: #F0F0F0 !important; }
+.admin-dark .text-muted { color: #8B8B8B !important; }
+
+/* Text opacity variants */
+.admin-dark .text-muted\/50 { color: rgba(139, 139, 139, 0.7) !important; }
+.admin-dark .text-muted\/40 { color: rgba(139, 139, 139, 0.55) !important; }
+.admin-dark .text-muted\/30 { color: rgba(139, 139, 139, 0.45) !important; }
+.admin-dark .text-muted\/20 { color: rgba(139, 139, 139, 0.35) !important; }
+.admin-dark .text-muted\/15 { color: rgba(139, 139, 139, 0.25) !important; }
+.admin-dark .text-muted\/60 { color: rgba(139, 139, 139, 0.8) !important; }
+
+/* Hover / group-hover text */
+.admin-dark .hover\:text-dark:hover       { color: #F0F0F0 !important; }
+.admin-dark .group:hover .group-hover\:text-dark { color: #F0F0F0 !important; }
+
+/* Placeholder */
+.admin-dark .placeholder\:text-muted\/40::placeholder {
+  color: rgba(139, 139, 139, 0.4) !important;
+}
+
+/* ── Backgrounds — accent tints ───────────────────────── */
+.admin-dark .bg-amber-50      { background-color: rgba(245, 158, 11, 0.08) !important; }
+.admin-dark .bg-amber-50\/50  { background-color: rgba(245, 158, 11, 0.05) !important; }
+.admin-dark .bg-blue-50       { background-color: rgba(59, 130, 246, 0.08) !important; }
+.admin-dark .bg-emerald-50    { background-color: rgba(16, 185, 129, 0.08) !important; }
+
+/* ── Borders ──────────────────────────────────────────── */
+.admin-dark .border-gray-100\/80 { border-color: rgba(255, 255, 255, 0.06) !important; }
+.admin-dark .border-gray-100     { border-color: rgba(255, 255, 255, 0.06) !important; }
+.admin-dark .border-gray-200     { border-color: rgba(255, 255, 255, 0.08) !important; }
+.admin-dark .border-gray-300     { border-color: rgba(255, 255, 255, 0.12) !important; }
+.admin-dark .border-bg           { border-color: #1E1E1E !important; }
+.admin-dark .border-primary\/5   { border-color: rgba(244, 180, 0, 0.08) !important; }
+
+/* Status-colored borders */
+.admin-dark .border-amber-100   { border-color: rgba(245, 158, 11, 0.12) !important; }
+.admin-dark .border-amber-200   { border-color: rgba(245, 158, 11, 0.18) !important; }
+.admin-dark .border-blue-200    { border-color: rgba(59, 130, 246, 0.18) !important; }
+.admin-dark .border-emerald-200 { border-color: rgba(16, 185, 129, 0.18) !important; }
+.admin-dark .border-red-100     { border-color: rgba(239, 68, 68, 0.12) !important; }
+.admin-dark .border-red-200     { border-color: rgba(239, 68, 68, 0.18) !important; }
+
+/* Divide — used for list row separators */
+.admin-dark .divide-bg > * + * { border-color: #1E1E1E !important; }
+
+/* ── Shadows — darker for dark mode ───────────────────── */
+.admin-dark .shadow-soft     { box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important; }
+.admin-dark .shadow-card     { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important; }
+.admin-dark .shadow-elevated { box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important; }
+
+/* ── Glass effect — dark variant ──────────────────────── */
+.admin-dark .glass {
+  background: rgba(20, 20, 20, 0.85) !important;
+}
+
+/* ── Ring / outline overrides ─────────────────────────── */
+.admin-dark .ring-dark { --tw-ring-color: #F0F0F0 !important; }
+
+/* ── Toggle switch (off state) ────────────────────────── */
+.admin-dark .bg-gray-300 { background-color: #333 !important; }
+
+/* ── Shadow-red (reset button glow) ───────────────────── */
+.admin-dark .shadow-red-200 { --tw-shadow-color: rgba(239, 68, 68, 0.15) !important; }
+.admin-dark .shadow-green-200 { --tw-shadow-color: rgba(34, 197, 94, 0.15) !important; }
+
+/* ── Opacity for hidden items ─────────────────────────── */
+.admin-dark .opacity-60 { opacity: 0.45 !important; }
+
+/* ── Scrollbar — dark variant ─────────────────────────── */
+.admin-dark ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.admin-dark ::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+.admin-dark ::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+.admin-dark ::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

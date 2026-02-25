@@ -1,0 +1,1095 @@
+import { readFileSync, writeFileSync } from 'fs';
+
+const FILE = 'src/store/cmsStore.ts';
+const src = readFileSync(FILE, 'utf8');
+
+// Find the THEME_PRESETS array boundaries
+const startMarker = '// ─── Theme Presets';
+const endMarkerLine = '// ─── CMS Store';
+
+const startIdx = src.indexOf(startMarker);
+// Find the ]; that closes the array, just before the CMS Store comment
+const cmsStoreIdx = src.indexOf(endMarkerLine);
+if (startIdx === -1 || cmsStoreIdx === -1) {
+  console.error('Could not find THEME_PRESETS boundaries', startIdx, cmsStoreIdx);
+  process.exit(1);
+}
+// Walk backwards from CMS Store to find the ];
+let endIdx = src.lastIndexOf('];', cmsStoreIdx);
+if (endIdx === -1) {
+  console.error('Could not find closing ];');
+  process.exit(1);
+}
+
+// Extract existing content blocks from each theme
+const themesSection = src.slice(startIdx, endIdx + 2); // include ];
+const contentBlocks = {};
+const themeIds = [
+  'bella-classic','modern-minimal','dark-elegance','vibrant-pop','rustic-italian',
+  'ocean-breeze','neon-night','fresh-garden','warm-sunset','nordic-clean',
+  'tokyo-street','desert-sand','cyber-punk','french-patisserie','midnight-blue',
+  'tropical-paradise','concrete-brutalist','retro-diner','enchanted-forest','art-deco'
+];
+
+for (const id of themeIds) {
+  const contentStart = themesSection.indexOf(`content:`, themesSection.indexOf(`id: '${id}'`));
+  if (contentStart === -1) { console.error(`No content for ${id}`); process.exit(1); }
+  // Find the matching closing of content block
+  let depth = 0;
+  let i = themesSection.indexOf('{', contentStart);
+  const blockStart = i;
+  for (; i < themesSection.length; i++) {
+    if (themesSection[i] === '{') depth++;
+    if (themesSection[i] === '}') { depth--; if (depth === 0) break; }
+  }
+  contentBlocks[id] = themesSection.slice(blockStart, i + 1);
+}
+
+// Build the new THEME_PRESETS
+const newThemes = `// ─── Theme Presets ───────────────────────────────────────
+
+export const THEME_PRESETS: ThemePreset[] = [
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 1. BELLA CLASSIC — The warm, inviting original
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'bella-classic',
+    name: 'Bella Classic',
+    description: 'The original — warm gold on white, welcoming and timeless',
+    preview: { bg: '#FFFFFF', accent: '#F4B400', text: '#1E1E1E', card: '#FFFFFF' },
+    styles: { ...defaultComponentStyles },
+    layout: {
+      ...defaultLayoutConfig,
+      sections: [
+        { id: 'hero', visible: true, variant: 'classic' },
+        { id: 'infoBar', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'default' },
+        { id: 'categoryBar', visible: true, variant: 'scroll' },
+        { id: 'menuContent', visible: true, variant: 'sections' },
+        { id: 'promoBanner', visible: false, variant: 'ribbon' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'socialProof', visible: false, variant: 'stars' },
+        { id: 'footer', visible: false, variant: 'simple' },
+      ],
+    },
+    content: ${contentBlocks['bella-classic']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 2. MODERN MINIMAL — Zen purity, zero noise
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'modern-minimal',
+    name: 'Modern Minimal',
+    description: 'Monochrome purity — no color, no clutter, just content',
+    preview: { bg: '#FFFFFF', accent: '#18181B', text: '#18181B', card: '#F5F5F5' },
+    styles: {
+      menuPageBgColor: '#FFFFFF', heroHeight: 'compact', heroOverlay: 'light', heroTextAlign: 'center',
+      infoBarBgColor: '#F5F5F5', infoBarTextColor: '#18181B', infoBarVisible: false,
+      cardBgColor: '#F5F5F5', cardTitleColor: '#18181B', cardDescriptionColor: '#71717A',
+      cardPriceColor: '#18181B', cardBorderRadius: 'sm', cardShadow: 'none', cardLayout: 'vertical',
+      sectionTitleColor: '#18181B', sectionSubtitleColor: '#A1A1AA', sectionDividerColor: '#E4E4E7',
+      sectionTitleAlign: 'center', sectionShowIcon: false, sectionShowDivider: false,
+      categoryBarBgColor: '#FFFFFF', categoryBarSticky: false,
+      orderBarStyle: 'solid', orderBarBgColor: '#18181B', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#FFFFFF', cartCardBgColor: '#F5F5F5', cartTitleColor: '#18181B', cartAccentColor: '#18181B',
+      checkoutPageBgColor: '#FFFFFF', checkoutCardBgColor: '#F5F5F5', checkoutAccentColor: '#18181B',
+      productCardBgColor: '#F5F5F5', productTitleColor: '#18181B', productDescriptionColor: '#71717A', productPriceColor: '#18181B',
+      buttonStyle: 'pill',
+      footerBgColor: '#18181B', footerTextColor: '#FAFAFA',
+      promoBannerBgColor: '#18181B', promoBannerTextColor: '#FAFAFA',
+    },
+    layout: {
+      heroVariant: 'minimal',
+      infoBarVariant: 'inline',
+      searchBarVariant: 'pill',
+      categoryBarVariant: 'underline',
+      menuContentVariant: 'grid',
+      orderBarVariant: 'minimal',
+      promoBannerVariant: 'ribbon',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'stars',
+      footerVariant: 'minimal',
+      pageLayout: 'fullWidth',
+      headingFont: 'system', bodyFont: 'system', baseFontSize: 'sm',
+      animationStyle: 'subtle', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'minimal' },
+        { id: 'searchBar', visible: true, variant: 'pill' },
+        { id: 'categoryBar', visible: true, variant: 'underline' },
+        { id: 'menuContent', visible: true, variant: 'grid' },
+        { id: 'footer', visible: true, variant: 'minimal' },
+        { id: 'infoBar', visible: false, variant: 'inline' },
+        { id: 'promoBanner', visible: false, variant: 'ribbon' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'socialProof', visible: false, variant: 'stars' },
+      ],
+    },
+    content: ${contentBlocks['modern-minimal']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 3. DARK ELEGANCE — Opulent night, five-star luxury
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'dark-elegance',
+    name: 'Dark Elegance',
+    description: 'Rich black & gold — magazine layout, every luxury detail on display',
+    preview: { bg: '#080808', accent: '#C8A951', text: '#F5F0E8', card: '#151515' },
+    styles: {
+      menuPageBgColor: '#080808', heroHeight: 'tall', heroOverlay: 'dark', heroTextAlign: 'center',
+      infoBarBgColor: '#151515', infoBarTextColor: '#F5F0E8', infoBarVisible: true,
+      cardBgColor: '#151515', cardTitleColor: '#F5F0E8', cardDescriptionColor: '#8C8478',
+      cardPriceColor: '#C8A951', cardBorderRadius: 'lg', cardShadow: 'md', cardLayout: 'vertical',
+      sectionTitleColor: '#F5F0E8', sectionSubtitleColor: '#C8A951', sectionDividerColor: '#C8A951',
+      sectionTitleAlign: 'center', sectionShowIcon: false, sectionShowDivider: true,
+      categoryBarBgColor: '#080808', categoryBarSticky: true,
+      orderBarStyle: 'solid', orderBarBgColor: '#C8A951', orderBarTextColor: '#080808',
+      cartPageBgColor: '#080808', cartCardBgColor: '#151515', cartTitleColor: '#F5F0E8', cartAccentColor: '#C8A951',
+      checkoutPageBgColor: '#080808', checkoutCardBgColor: '#151515', checkoutAccentColor: '#C8A951',
+      productCardBgColor: '#151515', productTitleColor: '#F5F0E8', productDescriptionColor: '#8C8478', productPriceColor: '#C8A951',
+      buttonStyle: 'rounded',
+      footerBgColor: '#050505', footerTextColor: '#C8A951',
+      promoBannerBgColor: '#C8A951', promoBannerTextColor: '#080808',
+    },
+    layout: {
+      heroVariant: 'overlay-full',
+      infoBarVariant: 'floating',
+      searchBarVariant: 'minimal',
+      categoryBarVariant: 'pills',
+      menuContentVariant: 'magazine',
+      orderBarVariant: 'sticky-bottom',
+      promoBannerVariant: 'card',
+      featuredVariant: 'carousel',
+      socialProofVariant: 'testimonial',
+      footerVariant: 'branded',
+      pageLayout: 'standard',
+      headingFont: 'serif', bodyFont: 'elegant', baseFontSize: 'md',
+      animationStyle: 'dramatic', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'overlay-full' },
+        { id: 'infoBar', visible: true, variant: 'floating' },
+        { id: 'promoBanner', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'minimal' },
+        { id: 'categoryBar', visible: true, variant: 'pills' },
+        { id: 'featuredSection', visible: false, variant: 'carousel' },
+        { id: 'menuContent', visible: true, variant: 'magazine' },
+        { id: 'socialProof', visible: true, variant: 'testimonial' },
+        { id: 'footer', visible: true, variant: 'branded' },
+      ],
+    },
+    content: ${contentBlocks['dark-elegance']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 4. VIBRANT POP — Explosive color, maximum energy
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'vibrant-pop',
+    name: 'Vibrant Pop',
+    description: 'Split hero, scrolling marquee, FAB button — a party on screen',
+    preview: { bg: '#FFF5EB', accent: '#EA580C', text: '#1C1917', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#FFF5EB', heroHeight: 'tall', heroOverlay: 'medium', heroTextAlign: 'left',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#1C1917', infoBarVisible: true,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#1C1917', cardDescriptionColor: '#78716C',
+      cardPriceColor: '#EA580C', cardBorderRadius: 'xl', cardShadow: 'lg', cardLayout: 'vertical',
+      sectionTitleColor: '#1C1917', sectionSubtitleColor: '#EA580C', sectionDividerColor: '#FDBA74',
+      sectionTitleAlign: 'left', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#FFF5EB', categoryBarSticky: true,
+      orderBarStyle: 'gradient', orderBarBgColor: '#EA580C', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#FFF5EB', cartCardBgColor: '#FFFFFF', cartTitleColor: '#1C1917', cartAccentColor: '#EA580C',
+      checkoutPageBgColor: '#FFF5EB', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#EA580C',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#1C1917', productDescriptionColor: '#78716C', productPriceColor: '#EA580C',
+      buttonStyle: 'pill',
+      footerBgColor: '#EA580C', footerTextColor: '#FFFFFF',
+      promoBannerBgColor: '#EA580C', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'split',
+      infoBarVariant: 'banner',
+      searchBarVariant: 'default',
+      categoryBarVariant: 'pills',
+      menuContentVariant: 'grid',
+      orderBarVariant: 'fab',
+      promoBannerVariant: 'marquee',
+      featuredVariant: 'carousel',
+      socialProofVariant: 'counter',
+      footerVariant: 'branded',
+      pageLayout: 'fullWidth',
+      headingFont: 'display', bodyFont: 'system', baseFontSize: 'lg',
+      animationStyle: 'playful', contentDensity: 'comfortable', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'split' },
+        { id: 'promoBanner', visible: true, variant: 'marquee' },
+        { id: 'infoBar', visible: true, variant: 'banner' },
+        { id: 'searchBar', visible: true, variant: 'default' },
+        { id: 'categoryBar', visible: true, variant: 'pills' },
+        { id: 'featuredSection', visible: false, variant: 'carousel' },
+        { id: 'menuContent', visible: true, variant: 'grid' },
+        { id: 'socialProof', visible: true, variant: 'counter' },
+        { id: 'footer', visible: true, variant: 'branded' },
+      ],
+    },
+    content: ${contentBlocks['vibrant-pop']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 5. RUSTIC ITALIAN — Old-world trattoria warmth
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'rustic-italian',
+    name: 'Rustic Italian',
+    description: 'Parchment & terracotta — serif type, classic sections, detailed footer',
+    preview: { bg: '#FBF3E4', accent: '#A0522D', text: '#3B1A04', card: '#FFF8EE' },
+    styles: {
+      menuPageBgColor: '#FBF3E4', heroHeight: 'normal', heroOverlay: 'dark', heroTextAlign: 'left',
+      infoBarBgColor: '#FFF8EE', infoBarTextColor: '#3B1A04', infoBarVisible: true,
+      cardBgColor: '#FFF8EE', cardTitleColor: '#3B1A04', cardDescriptionColor: '#7C5A2E',
+      cardPriceColor: '#A0522D', cardBorderRadius: 'md', cardShadow: 'sm', cardLayout: 'horizontal', cardImagePosition: 'left',
+      sectionTitleColor: '#3B1A04', sectionSubtitleColor: '#A0522D', sectionDividerColor: '#D2A679',
+      sectionTitleAlign: 'left', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#FBF3E4', categoryBarSticky: true,
+      orderBarStyle: 'solid', orderBarBgColor: '#A0522D', orderBarTextColor: '#FFF8EE',
+      cartPageBgColor: '#FBF3E4', cartCardBgColor: '#FFF8EE', cartTitleColor: '#3B1A04', cartAccentColor: '#A0522D',
+      checkoutPageBgColor: '#FBF3E4', checkoutCardBgColor: '#FFF8EE', checkoutAccentColor: '#A0522D',
+      productCardBgColor: '#FFF8EE', productTitleColor: '#3B1A04', productDescriptionColor: '#7C5A2E', productPriceColor: '#A0522D',
+      buttonStyle: 'rounded',
+      footerBgColor: '#3B1A04', footerTextColor: '#FBF3E4',
+      promoBannerBgColor: '#A0522D', promoBannerTextColor: '#FFF8EE',
+    },
+    layout: {
+      heroVariant: 'classic',
+      infoBarVariant: 'card',
+      searchBarVariant: 'default',
+      categoryBarVariant: 'scroll',
+      menuContentVariant: 'sections',
+      orderBarVariant: 'floating',
+      promoBannerVariant: 'ribbon',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'stars',
+      footerVariant: 'detailed',
+      pageLayout: 'standard',
+      headingFont: 'serif', bodyFont: 'serif', baseFontSize: 'md',
+      animationStyle: 'subtle', contentDensity: 'comfortable', cardGap: 'normal',
+      sections: [
+        { id: 'hero', visible: true, variant: 'classic' },
+        { id: 'infoBar', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'default' },
+        { id: 'categoryBar', visible: true, variant: 'scroll' },
+        { id: 'menuContent', visible: true, variant: 'sections' },
+        { id: 'socialProof', visible: true, variant: 'stars' },
+        { id: 'footer', visible: true, variant: 'detailed' },
+        { id: 'promoBanner', visible: false, variant: 'ribbon' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+      ],
+    },
+    content: ${contentBlocks['rustic-italian']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 6. OCEAN BREEZE — Glass morphism, coastal float
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'ocean-breeze',
+    name: 'Ocean Breeze',
+    description: 'Glass-style order bar, floating promo, pill search, images on right — coastal zen',
+    preview: { bg: '#E4F5FB', accent: '#0891B2', text: '#083344', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#E4F5FB', heroHeight: 'normal', heroOverlay: 'medium', heroTextAlign: 'center',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#083344', infoBarVisible: true,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#083344', cardDescriptionColor: '#4B7A8A',
+      cardPriceColor: '#0891B2', cardBorderRadius: 'xl', cardShadow: 'sm', cardLayout: 'horizontal', cardImagePosition: 'right',
+      sectionTitleColor: '#083344', sectionSubtitleColor: '#0891B2', sectionDividerColor: '#67E8F9',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#E4F5FB', categoryBarSticky: false,
+      orderBarStyle: 'glass', orderBarBgColor: '#0891B2', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#E4F5FB', cartCardBgColor: '#FFFFFF', cartTitleColor: '#083344', cartAccentColor: '#0891B2',
+      checkoutPageBgColor: '#E4F5FB', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#0891B2',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#083344', productDescriptionColor: '#4B7A8A', productPriceColor: '#0891B2',
+      buttonStyle: 'pill',
+      footerBgColor: '#083344', footerTextColor: '#E4F5FB',
+      promoBannerBgColor: '#0891B2', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'centered',
+      infoBarVariant: 'floating',
+      searchBarVariant: 'pill',
+      categoryBarVariant: 'pills',
+      menuContentVariant: 'grid',
+      orderBarVariant: 'floating',
+      promoBannerVariant: 'floating',
+      featuredVariant: 'banner',
+      socialProofVariant: 'counter',
+      footerVariant: 'simple',
+      pageLayout: 'standard',
+      headingFont: 'system', bodyFont: 'system', baseFontSize: 'md',
+      animationStyle: 'smooth', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'centered' },
+        { id: 'infoBar', visible: true, variant: 'floating' },
+        { id: 'promoBanner', visible: true, variant: 'floating' },
+        { id: 'searchBar', visible: true, variant: 'pill' },
+        { id: 'categoryBar', visible: true, variant: 'pills' },
+        { id: 'featuredSection', visible: false, variant: 'banner' },
+        { id: 'menuContent', visible: true, variant: 'grid' },
+        { id: 'socialProof', visible: true, variant: 'counter' },
+        { id: 'footer', visible: true, variant: 'simple' },
+      ],
+    },
+    content: ${contentBlocks['ocean-breeze']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 7. NEON NIGHT — Rave kitchen, pure black + hot magenta
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'neon-night',
+    name: 'Neon Night',
+    description: 'Pure black canvas, neon purple glow, FAB button, scrolling marquee — after-dark energy',
+    preview: { bg: '#000000', accent: '#A855F7', text: '#FAFAFA', card: '#0D0D0D' },
+    styles: {
+      menuPageBgColor: '#000000', heroHeight: 'tall', heroOverlay: 'dark', heroTextAlign: 'center',
+      infoBarBgColor: '#0D0D0D', infoBarTextColor: '#FAFAFA', infoBarVisible: false,
+      cardBgColor: '#0D0D0D', cardTitleColor: '#FAFAFA', cardDescriptionColor: '#6B6B6B',
+      cardPriceColor: '#A855F7', cardBorderRadius: 'xl', cardShadow: 'lg', cardLayout: 'vertical',
+      sectionTitleColor: '#FAFAFA', sectionSubtitleColor: '#A855F7', sectionDividerColor: '#7C3AED',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#000000', categoryBarSticky: true,
+      orderBarStyle: 'gradient', orderBarBgColor: '#A855F7', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#000000', cartCardBgColor: '#0D0D0D', cartTitleColor: '#FAFAFA', cartAccentColor: '#A855F7',
+      checkoutPageBgColor: '#000000', checkoutCardBgColor: '#0D0D0D', checkoutAccentColor: '#A855F7',
+      productCardBgColor: '#0D0D0D', productTitleColor: '#FAFAFA', productDescriptionColor: '#6B6B6B', productPriceColor: '#A855F7',
+      buttonStyle: 'pill',
+      footerBgColor: '#000000', footerTextColor: '#A855F7',
+      promoBannerBgColor: '#7C3AED', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'overlay-full',
+      infoBarVariant: 'inline',
+      searchBarVariant: 'pill',
+      categoryBarVariant: 'pills',
+      menuContentVariant: 'grid',
+      orderBarVariant: 'fab',
+      promoBannerVariant: 'marquee',
+      featuredVariant: 'carousel',
+      socialProofVariant: 'counter',
+      footerVariant: 'minimal',
+      pageLayout: 'fullWidth',
+      headingFont: 'display', bodyFont: 'system', baseFontSize: 'md',
+      animationStyle: 'dramatic', contentDensity: 'comfortable', cardGap: 'normal',
+      sections: [
+        { id: 'hero', visible: true, variant: 'overlay-full' },
+        { id: 'promoBanner', visible: true, variant: 'marquee' },
+        { id: 'searchBar', visible: true, variant: 'pill' },
+        { id: 'categoryBar', visible: true, variant: 'pills' },
+        { id: 'featuredSection', visible: false, variant: 'carousel' },
+        { id: 'menuContent', visible: true, variant: 'grid' },
+        { id: 'socialProof', visible: true, variant: 'counter' },
+        { id: 'footer', visible: true, variant: 'minimal' },
+        { id: 'infoBar', visible: false, variant: 'inline' },
+      ],
+    },
+    content: ${contentBlocks['neon-night']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 8. FRESH GARDEN — Farm market, grid categories, list layout
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'fresh-garden',
+    name: 'Fresh Garden',
+    description: 'Grid category bar, list-style menu, image-right cards — farm market feel',
+    preview: { bg: '#F0FFF4', accent: '#16A34A', text: '#14532D', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#F0FFF4', heroHeight: 'normal', heroOverlay: 'medium', heroTextAlign: 'left',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#14532D', infoBarVisible: true,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#14532D', cardDescriptionColor: '#4D7C56',
+      cardPriceColor: '#16A34A', cardBorderRadius: 'lg', cardShadow: 'sm', cardLayout: 'horizontal', cardImagePosition: 'right',
+      sectionTitleColor: '#14532D', sectionSubtitleColor: '#16A34A', sectionDividerColor: '#86EFAC',
+      sectionTitleAlign: 'left', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#F0FFF4', categoryBarSticky: false,
+      orderBarStyle: 'solid', orderBarBgColor: '#16A34A', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#F0FFF4', cartCardBgColor: '#FFFFFF', cartTitleColor: '#14532D', cartAccentColor: '#16A34A',
+      checkoutPageBgColor: '#F0FFF4', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#16A34A',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#14532D', productDescriptionColor: '#4D7C56', productPriceColor: '#16A34A',
+      buttonStyle: 'rounded',
+      footerBgColor: '#14532D', footerTextColor: '#F0FFF4',
+      promoBannerBgColor: '#16A34A', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'classic',
+      infoBarVariant: 'inline',
+      searchBarVariant: 'default',
+      categoryBarVariant: 'grid',
+      menuContentVariant: 'list',
+      orderBarVariant: 'floating',
+      promoBannerVariant: 'ribbon',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'stars',
+      footerVariant: 'detailed',
+      pageLayout: 'standard',
+      headingFont: 'serif', bodyFont: 'system', baseFontSize: 'md',
+      animationStyle: 'subtle', contentDensity: 'comfortable', cardGap: 'normal',
+      sections: [
+        { id: 'hero', visible: true, variant: 'classic' },
+        { id: 'infoBar', visible: true, variant: 'inline' },
+        { id: 'searchBar', visible: true, variant: 'default' },
+        { id: 'categoryBar', visible: true, variant: 'grid' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'menuContent', visible: true, variant: 'list' },
+        { id: 'socialProof', visible: true, variant: 'stars' },
+        { id: 'footer', visible: true, variant: 'detailed' },
+        { id: 'promoBanner', visible: false, variant: 'ribbon' },
+      ],
+    },
+    content: ${contentBlocks['fresh-garden']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 9. WARM SUNSET — Romantic terrace, magazine layout
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'warm-sunset',
+    name: 'Warm Sunset',
+    description: 'Magazine layout, sticky order bar, testimonial reviews — rooftop romance',
+    preview: { bg: '#FFF5EB', accent: '#BE185D', text: '#1E1E1E', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#FFF5EB', heroHeight: 'tall', heroOverlay: 'medium', heroTextAlign: 'center',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#1E1E1E', infoBarVisible: true,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#1E1E1E', cardDescriptionColor: '#6B7280',
+      cardPriceColor: '#BE185D', cardBorderRadius: 'xl', cardShadow: 'md', cardLayout: 'vertical',
+      sectionTitleColor: '#1E1E1E', sectionSubtitleColor: '#BE185D', sectionDividerColor: '#FBCFE8',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#FFF5EB', categoryBarSticky: true,
+      orderBarStyle: 'gradient', orderBarBgColor: '#BE185D', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#FFF5EB', cartCardBgColor: '#FFFFFF', cartTitleColor: '#1E1E1E', cartAccentColor: '#BE185D',
+      checkoutPageBgColor: '#FFF5EB', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#BE185D',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#1E1E1E', productDescriptionColor: '#6B7280', productPriceColor: '#BE185D',
+      buttonStyle: 'pill',
+      footerBgColor: '#831843', footerTextColor: '#FFF5EB',
+      promoBannerBgColor: '#BE185D', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'centered',
+      infoBarVariant: 'card',
+      searchBarVariant: 'minimal',
+      categoryBarVariant: 'scroll',
+      menuContentVariant: 'magazine',
+      orderBarVariant: 'sticky-bottom',
+      promoBannerVariant: 'card',
+      featuredVariant: 'banner',
+      socialProofVariant: 'testimonial',
+      footerVariant: 'branded',
+      pageLayout: 'standard',
+      headingFont: 'display', bodyFont: 'elegant', baseFontSize: 'md',
+      animationStyle: 'smooth', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'centered' },
+        { id: 'infoBar', visible: true, variant: 'card' },
+        { id: 'promoBanner', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'minimal' },
+        { id: 'categoryBar', visible: true, variant: 'scroll' },
+        { id: 'featuredSection', visible: false, variant: 'banner' },
+        { id: 'menuContent', visible: true, variant: 'magazine' },
+        { id: 'socialProof', visible: true, variant: 'testimonial' },
+        { id: 'footer', visible: true, variant: 'branded' },
+      ],
+    },
+    content: ${contentBlocks['warm-sunset']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 10. NORDIC CLEAN — Brutally sparse Scandinavian
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'nordic-clean',
+    name: 'Nordic Clean',
+    description: 'Compact page, hidden search, minimal category bar — only the essentials remain',
+    preview: { bg: '#F9FAFB', accent: '#334155', text: '#0F172A', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#F9FAFB', heroHeight: 'compact', heroOverlay: 'light', heroTextAlign: 'left',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#0F172A', infoBarVisible: false,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#0F172A', cardDescriptionColor: '#64748B',
+      cardPriceColor: '#334155', cardBorderRadius: 'sm', cardShadow: 'none', cardLayout: 'horizontal', cardImagePosition: 'left',
+      sectionTitleColor: '#0F172A', sectionSubtitleColor: '#94A3B8', sectionDividerColor: '#E2E8F0',
+      sectionTitleAlign: 'left', sectionShowIcon: false, sectionShowDivider: false,
+      categoryBarBgColor: '#F9FAFB', categoryBarSticky: false,
+      orderBarStyle: 'solid', orderBarBgColor: '#334155', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#F9FAFB', cartCardBgColor: '#FFFFFF', cartTitleColor: '#0F172A', cartAccentColor: '#334155',
+      checkoutPageBgColor: '#F9FAFB', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#334155',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#0F172A', productDescriptionColor: '#64748B', productPriceColor: '#334155',
+      buttonStyle: 'rounded',
+      footerBgColor: '#0F172A', footerTextColor: '#F9FAFB',
+      promoBannerBgColor: '#334155', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'minimal',
+      infoBarVariant: 'inline',
+      searchBarVariant: 'hidden',
+      categoryBarVariant: 'minimal',
+      menuContentVariant: 'list',
+      orderBarVariant: 'minimal',
+      promoBannerVariant: 'ribbon',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'stars',
+      footerVariant: 'minimal',
+      pageLayout: 'compact',
+      headingFont: 'system', bodyFont: 'system', baseFontSize: 'sm',
+      animationStyle: 'none', contentDensity: 'compact', cardGap: 'tight',
+      sections: [
+        { id: 'hero', visible: true, variant: 'minimal' },
+        { id: 'categoryBar', visible: true, variant: 'minimal' },
+        { id: 'menuContent', visible: true, variant: 'list' },
+        { id: 'footer', visible: true, variant: 'minimal' },
+        { id: 'searchBar', visible: false, variant: 'hidden' },
+        { id: 'infoBar', visible: false, variant: 'inline' },
+        { id: 'promoBanner', visible: false, variant: 'ribbon' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'socialProof', visible: false, variant: 'stars' },
+      ],
+    },
+    content: ${contentBlocks['nordic-clean']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 11. TOKYO STREET — Compact izakaya, ticket-counter vibe
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'tokyo-street',
+    name: 'Tokyo Street',
+    description: 'Compact layout, right-side images, underline tabs, sticky bottom bar — izakaya counter',
+    preview: { bg: '#FAFAF9', accent: '#DC2626', text: '#0C0A09', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#FAFAF9', heroHeight: 'compact', heroOverlay: 'dark', heroTextAlign: 'left',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#0C0A09', infoBarVisible: false,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#0C0A09', cardDescriptionColor: '#78716C',
+      cardPriceColor: '#DC2626', cardBorderRadius: 'sm', cardShadow: 'none', cardLayout: 'horizontal', cardImagePosition: 'right',
+      sectionTitleColor: '#0C0A09', sectionSubtitleColor: '#A8A29E', sectionDividerColor: '#DC2626',
+      sectionTitleAlign: 'left', sectionShowIcon: false, sectionShowDivider: true,
+      categoryBarBgColor: '#FAFAF9', categoryBarSticky: true,
+      orderBarStyle: 'solid', orderBarBgColor: '#DC2626', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#FAFAF9', cartCardBgColor: '#FFFFFF', cartTitleColor: '#0C0A09', cartAccentColor: '#DC2626',
+      checkoutPageBgColor: '#FAFAF9', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#DC2626',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#0C0A09', productDescriptionColor: '#78716C', productPriceColor: '#DC2626',
+      buttonStyle: 'square',
+      footerBgColor: '#0C0A09', footerTextColor: '#FAFAF9',
+      promoBannerBgColor: '#DC2626', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'minimal',
+      infoBarVariant: 'inline',
+      searchBarVariant: 'minimal',
+      categoryBarVariant: 'underline',
+      menuContentVariant: 'compact',
+      orderBarVariant: 'sticky-bottom',
+      promoBannerVariant: 'ribbon',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'counter',
+      footerVariant: 'minimal',
+      pageLayout: 'compact',
+      headingFont: 'mono', bodyFont: 'mono', baseFontSize: 'sm',
+      animationStyle: 'subtle', contentDensity: 'compact', cardGap: 'tight',
+      sections: [
+        { id: 'hero', visible: true, variant: 'minimal' },
+        { id: 'promoBanner', visible: true, variant: 'ribbon' },
+        { id: 'searchBar', visible: true, variant: 'minimal' },
+        { id: 'categoryBar', visible: true, variant: 'underline' },
+        { id: 'menuContent', visible: true, variant: 'compact' },
+        { id: 'socialProof', visible: true, variant: 'counter' },
+        { id: 'footer', visible: true, variant: 'minimal' },
+        { id: 'infoBar', visible: false, variant: 'inline' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+      ],
+    },
+    content: ${contentBlocks['tokyo-street']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 12. DESERT SAND — Moroccan riad, all sections enabled
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'desert-sand',
+    name: 'Desert Sand',
+    description: 'Full-bleed hero, handwritten headings, card promo, testimonial reviews — Moroccan opulence',
+    preview: { bg: '#FDF4E8', accent: '#C2410C', text: '#431407', card: '#FFF8F1' },
+    styles: {
+      menuPageBgColor: '#FDF4E8', heroHeight: 'tall', heroOverlay: 'medium', heroTextAlign: 'center',
+      infoBarBgColor: '#FFF8F1', infoBarTextColor: '#431407', infoBarVisible: true,
+      cardBgColor: '#FFF8F1', cardTitleColor: '#431407', cardDescriptionColor: '#9A3412',
+      cardPriceColor: '#C2410C', cardBorderRadius: 'xl', cardShadow: 'sm', cardLayout: 'vertical',
+      sectionTitleColor: '#431407', sectionSubtitleColor: '#C2410C', sectionDividerColor: '#FDBA74',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#FDF4E8', categoryBarSticky: false,
+      orderBarStyle: 'gradient', orderBarBgColor: '#C2410C', orderBarTextColor: '#FFF8F1',
+      cartPageBgColor: '#FDF4E8', cartCardBgColor: '#FFF8F1', cartTitleColor: '#431407', cartAccentColor: '#C2410C',
+      checkoutPageBgColor: '#FDF4E8', checkoutCardBgColor: '#FFF8F1', checkoutAccentColor: '#C2410C',
+      productCardBgColor: '#FFF8F1', productTitleColor: '#431407', productDescriptionColor: '#9A3412', productPriceColor: '#C2410C',
+      buttonStyle: 'rounded',
+      footerBgColor: '#431407', footerTextColor: '#FDBA74',
+      promoBannerBgColor: '#FDBA74', promoBannerTextColor: '#431407',
+    },
+    layout: {
+      heroVariant: 'overlay-full',
+      infoBarVariant: 'card',
+      searchBarVariant: 'default',
+      categoryBarVariant: 'scroll',
+      menuContentVariant: 'sections',
+      orderBarVariant: 'floating',
+      promoBannerVariant: 'card',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'testimonial',
+      footerVariant: 'detailed',
+      pageLayout: 'standard',
+      headingFont: 'handwritten', bodyFont: 'elegant', baseFontSize: 'lg',
+      animationStyle: 'smooth', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'overlay-full' },
+        { id: 'infoBar', visible: true, variant: 'card' },
+        { id: 'promoBanner', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'default' },
+        { id: 'categoryBar', visible: true, variant: 'scroll' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'menuContent', visible: true, variant: 'sections' },
+        { id: 'socialProof', visible: true, variant: 'testimonial' },
+        { id: 'footer', visible: true, variant: 'detailed' },
+      ],
+    },
+    content: ${contentBlocks['desert-sand']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 13. CYBER PUNK — Data feed, dual-accent neon
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'cyber-punk',
+    name: 'Cyber Punk',
+    description: 'Full-width grid, FAB order, marquee banner, mono type — a digital data feed',
+    preview: { bg: '#000000', accent: '#22D3EE', text: '#E2E8F0', card: '#0A1628' },
+    styles: {
+      menuPageBgColor: '#000000', heroHeight: 'tall', heroOverlay: 'dark', heroTextAlign: 'center',
+      infoBarBgColor: '#0A1628', infoBarTextColor: '#E2E8F0', infoBarVisible: true,
+      cardBgColor: '#0A1628', cardTitleColor: '#E2E8F0', cardDescriptionColor: '#64748B',
+      cardPriceColor: '#22D3EE', cardBorderRadius: 'sm', cardShadow: 'lg', cardLayout: 'horizontal', cardImagePosition: 'left',
+      sectionTitleColor: '#22D3EE', sectionSubtitleColor: '#64748B', sectionDividerColor: '#22D3EE',
+      sectionTitleAlign: 'left', sectionShowIcon: false, sectionShowDivider: true,
+      categoryBarBgColor: '#000000', categoryBarSticky: true,
+      orderBarStyle: 'glass', orderBarBgColor: '#22D3EE', orderBarTextColor: '#000000',
+      cartPageBgColor: '#000000', cartCardBgColor: '#0A1628', cartTitleColor: '#E2E8F0', cartAccentColor: '#22D3EE',
+      checkoutPageBgColor: '#000000', checkoutCardBgColor: '#0A1628', checkoutAccentColor: '#22D3EE',
+      productCardBgColor: '#0A1628', productTitleColor: '#E2E8F0', productDescriptionColor: '#64748B', productPriceColor: '#22D3EE',
+      buttonStyle: 'square',
+      footerBgColor: '#000000', footerTextColor: '#22D3EE',
+      promoBannerBgColor: '#22D3EE', promoBannerTextColor: '#000000',
+    },
+    layout: {
+      heroVariant: 'overlay-full',
+      infoBarVariant: 'banner',
+      searchBarVariant: 'pill',
+      categoryBarVariant: 'pills',
+      menuContentVariant: 'grid',
+      orderBarVariant: 'fab',
+      promoBannerVariant: 'marquee',
+      featuredVariant: 'carousel',
+      socialProofVariant: 'counter',
+      footerVariant: 'minimal',
+      pageLayout: 'fullWidth',
+      headingFont: 'mono', bodyFont: 'mono', baseFontSize: 'sm',
+      animationStyle: 'dramatic', contentDensity: 'comfortable', cardGap: 'tight',
+      sections: [
+        { id: 'hero', visible: true, variant: 'overlay-full' },
+        { id: 'promoBanner', visible: true, variant: 'marquee' },
+        { id: 'infoBar', visible: true, variant: 'banner' },
+        { id: 'searchBar', visible: true, variant: 'pill' },
+        { id: 'categoryBar', visible: true, variant: 'pills' },
+        { id: 'featuredSection', visible: false, variant: 'carousel' },
+        { id: 'menuContent', visible: true, variant: 'grid' },
+        { id: 'socialProof', visible: true, variant: 'counter' },
+        { id: 'footer', visible: true, variant: 'minimal' },
+      ],
+    },
+    content: ${contentBlocks['cyber-punk']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 14. FRENCH PÂTISSERIE — Parisian boutique, floating elegance
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'french-patisserie',
+    name: 'French Pâtisserie',
+    description: 'Magazine layout, floating info & promo, handwritten headings — Parisian showcase',
+    preview: { bg: '#FFF0F5', accent: '#DB2777', text: '#4A0D2B', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#FFF0F5', heroHeight: 'normal', heroOverlay: 'light', heroTextAlign: 'center',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#4A0D2B', infoBarVisible: true,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#4A0D2B', cardDescriptionColor: '#9D174D',
+      cardPriceColor: '#DB2777', cardBorderRadius: 'xl', cardShadow: 'sm', cardLayout: 'vertical',
+      sectionTitleColor: '#4A0D2B', sectionSubtitleColor: '#DB2777', sectionDividerColor: '#F5D0FE',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#FFF0F5', categoryBarSticky: false,
+      orderBarStyle: 'gradient', orderBarBgColor: '#DB2777', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#FFF0F5', cartCardBgColor: '#FFFFFF', cartTitleColor: '#4A0D2B', cartAccentColor: '#DB2777',
+      checkoutPageBgColor: '#FFF0F5', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#DB2777',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#4A0D2B', productDescriptionColor: '#9D174D', productPriceColor: '#DB2777',
+      buttonStyle: 'pill',
+      footerBgColor: '#4A0D2B', footerTextColor: '#F5D0FE',
+      promoBannerBgColor: '#F5D0FE', promoBannerTextColor: '#4A0D2B',
+    },
+    layout: {
+      heroVariant: 'centered',
+      infoBarVariant: 'floating',
+      searchBarVariant: 'pill',
+      categoryBarVariant: 'scroll',
+      menuContentVariant: 'magazine',
+      orderBarVariant: 'floating',
+      promoBannerVariant: 'floating',
+      featuredVariant: 'banner',
+      socialProofVariant: 'testimonial',
+      footerVariant: 'branded',
+      pageLayout: 'standard',
+      headingFont: 'handwritten', bodyFont: 'elegant', baseFontSize: 'md',
+      animationStyle: 'smooth', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'centered' },
+        { id: 'infoBar', visible: true, variant: 'floating' },
+        { id: 'promoBanner', visible: true, variant: 'floating' },
+        { id: 'searchBar', visible: true, variant: 'pill' },
+        { id: 'categoryBar', visible: true, variant: 'scroll' },
+        { id: 'featuredSection', visible: false, variant: 'banner' },
+        { id: 'menuContent', visible: true, variant: 'magazine' },
+        { id: 'socialProof', visible: true, variant: 'testimonial' },
+        { id: 'footer', visible: true, variant: 'branded' },
+      ],
+    },
+    content: ${contentBlocks['french-patisserie']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 15. MIDNIGHT BLUE — Cocktail lounge, inline info, sticky bar
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'midnight-blue',
+    name: 'Midnight Blue',
+    description: 'Inline info bar, sticky order, card promo, highlight featured — sophisticated cocktail lounge',
+    preview: { bg: '#0B1120', accent: '#6366F1', text: '#E0E7FF', card: '#162033' },
+    styles: {
+      menuPageBgColor: '#0B1120', heroHeight: 'normal', heroOverlay: 'dark', heroTextAlign: 'left',
+      infoBarBgColor: '#162033', infoBarTextColor: '#E0E7FF', infoBarVisible: true,
+      cardBgColor: '#162033', cardTitleColor: '#E0E7FF', cardDescriptionColor: '#94A3B8',
+      cardPriceColor: '#6366F1', cardBorderRadius: 'lg', cardShadow: 'md', cardLayout: 'horizontal', cardImagePosition: 'left',
+      sectionTitleColor: '#E0E7FF', sectionSubtitleColor: '#818CF8', sectionDividerColor: '#6366F1',
+      sectionTitleAlign: 'left', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#0B1120', categoryBarSticky: true,
+      orderBarStyle: 'gradient', orderBarBgColor: '#6366F1', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#0B1120', cartCardBgColor: '#162033', cartTitleColor: '#E0E7FF', cartAccentColor: '#6366F1',
+      checkoutPageBgColor: '#0B1120', checkoutCardBgColor: '#162033', checkoutAccentColor: '#6366F1',
+      productCardBgColor: '#162033', productTitleColor: '#E0E7FF', productDescriptionColor: '#94A3B8', productPriceColor: '#6366F1',
+      buttonStyle: 'rounded',
+      footerBgColor: '#060B15', footerTextColor: '#818CF8',
+      promoBannerBgColor: '#6366F1', promoBannerTextColor: '#FFFFFF',
+    },
+    layout: {
+      heroVariant: 'classic',
+      infoBarVariant: 'inline',
+      searchBarVariant: 'minimal',
+      categoryBarVariant: 'scroll',
+      menuContentVariant: 'sections',
+      orderBarVariant: 'sticky-bottom',
+      promoBannerVariant: 'card',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'stars',
+      footerVariant: 'detailed',
+      pageLayout: 'standard',
+      headingFont: 'system', bodyFont: 'system', baseFontSize: 'md',
+      animationStyle: 'smooth', contentDensity: 'comfortable', cardGap: 'normal',
+      sections: [
+        { id: 'hero', visible: true, variant: 'classic' },
+        { id: 'infoBar', visible: true, variant: 'inline' },
+        { id: 'promoBanner', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'minimal' },
+        { id: 'categoryBar', visible: true, variant: 'scroll' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'menuContent', visible: true, variant: 'sections' },
+        { id: 'socialProof', visible: true, variant: 'stars' },
+        { id: 'footer', visible: true, variant: 'detailed' },
+      ],
+    },
+    content: ${contentBlocks['midnight-blue']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 16. TROPICAL PARADISE — Full-width island party
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'tropical-paradise',
+    name: 'Tropical Paradise',
+    description: 'Split hero, full-width grid, FAB order, scrolling marquee — a tiki bar explosion',
+    preview: { bg: '#FFFDE4', accent: '#0D9488', text: '#1C1917', card: '#FFFFFF' },
+    styles: {
+      menuPageBgColor: '#FFFDE4', heroHeight: 'tall', heroOverlay: 'light', heroTextAlign: 'center',
+      infoBarBgColor: '#FFFFFF', infoBarTextColor: '#1C1917', infoBarVisible: true,
+      cardBgColor: '#FFFFFF', cardTitleColor: '#1C1917', cardDescriptionColor: '#78716C',
+      cardPriceColor: '#0D9488', cardBorderRadius: 'xl', cardShadow: 'md', cardLayout: 'vertical',
+      sectionTitleColor: '#1C1917', sectionSubtitleColor: '#0D9488', sectionDividerColor: '#F59E0B',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#FFFDE4', categoryBarSticky: true,
+      orderBarStyle: 'gradient', orderBarBgColor: '#0D9488', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#FFFDE4', cartCardBgColor: '#FFFFFF', cartTitleColor: '#1C1917', cartAccentColor: '#0D9488',
+      checkoutPageBgColor: '#FFFDE4', checkoutCardBgColor: '#FFFFFF', checkoutAccentColor: '#0D9488',
+      productCardBgColor: '#FFFFFF', productTitleColor: '#1C1917', productDescriptionColor: '#78716C', productPriceColor: '#0D9488',
+      buttonStyle: 'pill',
+      footerBgColor: '#0D9488', footerTextColor: '#FFFFFF',
+      promoBannerBgColor: '#F59E0B', promoBannerTextColor: '#1C1917',
+    },
+    layout: {
+      heroVariant: 'split',
+      infoBarVariant: 'banner',
+      searchBarVariant: 'default',
+      categoryBarVariant: 'pills',
+      menuContentVariant: 'grid',
+      orderBarVariant: 'fab',
+      promoBannerVariant: 'marquee',
+      featuredVariant: 'carousel',
+      socialProofVariant: 'counter',
+      footerVariant: 'branded',
+      pageLayout: 'fullWidth',
+      headingFont: 'display', bodyFont: 'system', baseFontSize: 'lg',
+      animationStyle: 'playful', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'split' },
+        { id: 'promoBanner', visible: true, variant: 'marquee' },
+        { id: 'infoBar', visible: true, variant: 'banner' },
+        { id: 'searchBar', visible: true, variant: 'default' },
+        { id: 'categoryBar', visible: true, variant: 'pills' },
+        { id: 'featuredSection', visible: false, variant: 'carousel' },
+        { id: 'menuContent', visible: true, variant: 'grid' },
+        { id: 'socialProof', visible: true, variant: 'counter' },
+        { id: 'footer', visible: true, variant: 'branded' },
+      ],
+    },
+    content: ${contentBlocks['tropical-paradise']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 17. CONCRETE BRUTALIST — Raw industrial, stripped to bone
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'concrete-brutalist',
+    name: 'Concrete Brutalist',
+    description: 'Compact page, hidden search, no images, list-only — raw, undecorated, honest',
+    preview: { bg: '#D4D4D4', accent: '#0A0A0A', text: '#0A0A0A', card: '#E5E5E5' },
+    styles: {
+      menuPageBgColor: '#D4D4D4', heroHeight: 'compact', heroOverlay: 'dark', heroTextAlign: 'left',
+      infoBarBgColor: '#E5E5E5', infoBarTextColor: '#0A0A0A', infoBarVisible: false,
+      cardBgColor: '#E5E5E5', cardTitleColor: '#0A0A0A', cardDescriptionColor: '#525252',
+      cardPriceColor: '#0A0A0A', cardBorderRadius: 'sm', cardShadow: 'none', cardLayout: 'horizontal', cardImagePosition: 'left',
+      sectionTitleColor: '#0A0A0A', sectionSubtitleColor: '#525252', sectionDividerColor: '#0A0A0A',
+      sectionTitleAlign: 'left', sectionShowIcon: false, sectionShowDivider: true,
+      categoryBarBgColor: '#D4D4D4', categoryBarSticky: true,
+      orderBarStyle: 'solid', orderBarBgColor: '#0A0A0A', orderBarTextColor: '#E5E5E5',
+      cartPageBgColor: '#D4D4D4', cartCardBgColor: '#E5E5E5', cartTitleColor: '#0A0A0A', cartAccentColor: '#0A0A0A',
+      checkoutPageBgColor: '#D4D4D4', checkoutCardBgColor: '#E5E5E5', checkoutAccentColor: '#0A0A0A',
+      productCardBgColor: '#E5E5E5', productTitleColor: '#0A0A0A', productDescriptionColor: '#525252', productPriceColor: '#0A0A0A',
+      buttonStyle: 'square',
+      footerBgColor: '#0A0A0A', footerTextColor: '#D4D4D4',
+      promoBannerBgColor: '#0A0A0A', promoBannerTextColor: '#D4D4D4',
+    },
+    layout: {
+      heroVariant: 'minimal',
+      infoBarVariant: 'inline',
+      searchBarVariant: 'hidden',
+      categoryBarVariant: 'underline',
+      menuContentVariant: 'list',
+      orderBarVariant: 'minimal',
+      promoBannerVariant: 'ribbon',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'counter',
+      footerVariant: 'minimal',
+      pageLayout: 'compact',
+      headingFont: 'display', bodyFont: 'mono', baseFontSize: 'lg',
+      animationStyle: 'none', contentDensity: 'compact', cardGap: 'tight',
+      sections: [
+        { id: 'hero', visible: true, variant: 'minimal' },
+        { id: 'promoBanner', visible: true, variant: 'ribbon' },
+        { id: 'categoryBar', visible: true, variant: 'underline' },
+        { id: 'menuContent', visible: true, variant: 'list' },
+        { id: 'footer', visible: true, variant: 'minimal' },
+        { id: 'searchBar', visible: false, variant: 'hidden' },
+        { id: 'infoBar', visible: false, variant: 'inline' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'socialProof', visible: false, variant: 'counter' },
+      ],
+    },
+    content: ${contentBlocks['concrete-brutalist']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 18. RETRO DINER — 1950s chrome, split hero, everything on
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'retro-diner',
+    name: 'Retro Diner',
+    description: 'Split hero, banner info, card promo, highlight specials, detailed footer — all-American diner',
+    preview: { bg: '#FFFDD0', accent: '#DC2626', text: '#1C1917', card: '#FFFDE7' },
+    styles: {
+      menuPageBgColor: '#FFFDD0', heroHeight: 'normal', heroOverlay: 'medium', heroTextAlign: 'center',
+      infoBarBgColor: '#FFFDE7', infoBarTextColor: '#1C1917', infoBarVisible: true,
+      cardBgColor: '#FFFDE7', cardTitleColor: '#1C1917', cardDescriptionColor: '#78716C',
+      cardPriceColor: '#DC2626', cardBorderRadius: 'lg', cardShadow: 'md', cardLayout: 'horizontal', cardImagePosition: 'left',
+      sectionTitleColor: '#DC2626', sectionSubtitleColor: '#78716C', sectionDividerColor: '#DC2626',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#FFFDD0', categoryBarSticky: true,
+      orderBarStyle: 'solid', orderBarBgColor: '#DC2626', orderBarTextColor: '#FFFDD0',
+      cartPageBgColor: '#FFFDD0', cartCardBgColor: '#FFFDE7', cartTitleColor: '#1C1917', cartAccentColor: '#DC2626',
+      checkoutPageBgColor: '#FFFDD0', checkoutCardBgColor: '#FFFDE7', checkoutAccentColor: '#DC2626',
+      productCardBgColor: '#FFFDE7', productTitleColor: '#1C1917', productDescriptionColor: '#78716C', productPriceColor: '#DC2626',
+      buttonStyle: 'rounded',
+      footerBgColor: '#DC2626', footerTextColor: '#FFFDD0',
+      promoBannerBgColor: '#DC2626', promoBannerTextColor: '#FFFDD0',
+    },
+    layout: {
+      heroVariant: 'split',
+      infoBarVariant: 'banner',
+      searchBarVariant: 'default',
+      categoryBarVariant: 'scroll',
+      menuContentVariant: 'sections',
+      orderBarVariant: 'sticky-bottom',
+      promoBannerVariant: 'card',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'stars',
+      footerVariant: 'detailed',
+      pageLayout: 'standard',
+      headingFont: 'display', bodyFont: 'system', baseFontSize: 'md',
+      animationStyle: 'playful', contentDensity: 'comfortable', cardGap: 'normal',
+      sections: [
+        { id: 'hero', visible: true, variant: 'split' },
+        { id: 'infoBar', visible: true, variant: 'banner' },
+        { id: 'promoBanner', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'default' },
+        { id: 'categoryBar', visible: true, variant: 'scroll' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'menuContent', visible: true, variant: 'sections' },
+        { id: 'socialProof', visible: true, variant: 'stars' },
+        { id: 'footer', visible: true, variant: 'detailed' },
+      ],
+    },
+    content: ${contentBlocks['retro-diner']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 19. ENCHANTED FOREST — Dark woodland, magazine, mystical
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'enchanted-forest',
+    name: 'Enchanted Forest',
+    description: 'Dark forest bg, magazine page layout, glass order, grid categories — a mystical experience',
+    preview: { bg: '#0D1F17', accent: '#10B981', text: '#D1FAE5', card: '#162B20' },
+    styles: {
+      menuPageBgColor: '#0D1F17', heroHeight: 'tall', heroOverlay: 'dark', heroTextAlign: 'center',
+      infoBarBgColor: '#162B20', infoBarTextColor: '#D1FAE5', infoBarVisible: true,
+      cardBgColor: '#162B20', cardTitleColor: '#D1FAE5', cardDescriptionColor: '#6EE7B7',
+      cardPriceColor: '#10B981', cardBorderRadius: 'xl', cardShadow: 'sm', cardLayout: 'vertical',
+      sectionTitleColor: '#D1FAE5', sectionSubtitleColor: '#10B981', sectionDividerColor: '#D4A853',
+      sectionTitleAlign: 'center', sectionShowIcon: true, sectionShowDivider: true,
+      categoryBarBgColor: '#0D1F17', categoryBarSticky: false,
+      orderBarStyle: 'glass', orderBarBgColor: '#10B981', orderBarTextColor: '#FFFFFF',
+      cartPageBgColor: '#0D1F17', cartCardBgColor: '#162B20', cartTitleColor: '#D1FAE5', cartAccentColor: '#10B981',
+      checkoutPageBgColor: '#0D1F17', checkoutCardBgColor: '#162B20', checkoutAccentColor: '#10B981',
+      productCardBgColor: '#162B20', productTitleColor: '#D1FAE5', productDescriptionColor: '#6EE7B7', productPriceColor: '#10B981',
+      buttonStyle: 'pill',
+      footerBgColor: '#071410', footerTextColor: '#D4A853',
+      promoBannerBgColor: '#10B981', promoBannerTextColor: '#0D1F17',
+    },
+    layout: {
+      heroVariant: 'overlay-full',
+      infoBarVariant: 'floating',
+      searchBarVariant: 'minimal',
+      categoryBarVariant: 'grid',
+      menuContentVariant: 'magazine',
+      orderBarVariant: 'floating',
+      promoBannerVariant: 'floating',
+      featuredVariant: 'carousel',
+      socialProofVariant: 'testimonial',
+      footerVariant: 'branded',
+      pageLayout: 'magazine',
+      headingFont: 'serif', bodyFont: 'elegant', baseFontSize: 'lg',
+      animationStyle: 'dramatic', contentDensity: 'spacious', cardGap: 'wide',
+      sections: [
+        { id: 'hero', visible: true, variant: 'overlay-full' },
+        { id: 'infoBar', visible: true, variant: 'floating' },
+        { id: 'promoBanner', visible: true, variant: 'floating' },
+        { id: 'searchBar', visible: true, variant: 'minimal' },
+        { id: 'categoryBar', visible: true, variant: 'grid' },
+        { id: 'featuredSection', visible: false, variant: 'carousel' },
+        { id: 'menuContent', visible: true, variant: 'magazine' },
+        { id: 'socialProof', visible: true, variant: 'testimonial' },
+        { id: 'footer', visible: true, variant: 'branded' },
+      ],
+    },
+    content: ${contentBlocks['enchanted-forest']},
+  },
+
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 20. ART DECO — Gatsby glamour, geometric luxury
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  {
+    id: 'art-deco',
+    name: 'Art Deco',
+    description: 'Centered hero, underline tabs, sticky bar, card promo, testimonial — Jazz Age opulence',
+    preview: { bg: '#0C0A09', accent: '#FBBF24', text: '#FDE68A', card: '#1C1917' },
+    styles: {
+      menuPageBgColor: '#0C0A09', heroHeight: 'tall', heroOverlay: 'dark', heroTextAlign: 'center',
+      infoBarBgColor: '#1C1917', infoBarTextColor: '#FDE68A', infoBarVisible: true,
+      cardBgColor: '#1C1917', cardTitleColor: '#FDE68A', cardDescriptionColor: '#A8A29E',
+      cardPriceColor: '#FBBF24', cardBorderRadius: 'sm', cardShadow: 'md', cardLayout: 'vertical',
+      sectionTitleColor: '#FBBF24', sectionSubtitleColor: '#A8A29E', sectionDividerColor: '#FBBF24',
+      sectionTitleAlign: 'center', sectionShowIcon: false, sectionShowDivider: true,
+      categoryBarBgColor: '#0C0A09', categoryBarSticky: true,
+      orderBarStyle: 'solid', orderBarBgColor: '#FBBF24', orderBarTextColor: '#0C0A09',
+      cartPageBgColor: '#0C0A09', cartCardBgColor: '#1C1917', cartTitleColor: '#FDE68A', cartAccentColor: '#FBBF24',
+      checkoutPageBgColor: '#0C0A09', checkoutCardBgColor: '#1C1917', checkoutAccentColor: '#FBBF24',
+      productCardBgColor: '#1C1917', productTitleColor: '#FDE68A', productDescriptionColor: '#A8A29E', productPriceColor: '#FBBF24',
+      buttonStyle: 'square',
+      footerBgColor: '#050403', footerTextColor: '#FBBF24',
+      promoBannerBgColor: '#FBBF24', promoBannerTextColor: '#0C0A09',
+    },
+    layout: {
+      heroVariant: 'centered',
+      infoBarVariant: 'card',
+      searchBarVariant: 'minimal',
+      categoryBarVariant: 'underline',
+      menuContentVariant: 'sections',
+      orderBarVariant: 'sticky-bottom',
+      promoBannerVariant: 'card',
+      featuredVariant: 'highlight',
+      socialProofVariant: 'testimonial',
+      footerVariant: 'branded',
+      pageLayout: 'standard',
+      headingFont: 'display', bodyFont: 'serif', baseFontSize: 'md',
+      animationStyle: 'dramatic', contentDensity: 'comfortable', cardGap: 'normal',
+      sections: [
+        { id: 'hero', visible: true, variant: 'centered' },
+        { id: 'infoBar', visible: true, variant: 'card' },
+        { id: 'promoBanner', visible: true, variant: 'card' },
+        { id: 'searchBar', visible: true, variant: 'minimal' },
+        { id: 'categoryBar', visible: true, variant: 'underline' },
+        { id: 'featuredSection', visible: false, variant: 'highlight' },
+        { id: 'menuContent', visible: true, variant: 'sections' },
+        { id: 'socialProof', visible: true, variant: 'testimonial' },
+        { id: 'footer', visible: true, variant: 'branded' },
+      ],
+    },
+    content: ${contentBlocks['art-deco']},
+  },
+`;
+
+const newSection = newThemes + '];\n';
+
+// Replace the old THEME_PRESETS section
+const before = src.slice(0, startIdx);
+const after = src.slice(endIdx + 2); // skip past ];
+const result = before + newSection + '\n' + after;
+
+writeFileSync(FILE, result, 'utf8');
+console.log('✅ All 20 themes rewritten successfully!');
+console.log('Lines before:', src.split('\\n').length, '→ Lines after:', result.split('\\n').length);
