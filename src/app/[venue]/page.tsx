@@ -517,7 +517,7 @@ export default function MenuPage() {
                 <img src={item.image} alt={tProduct(item, "name")} className="w-full h-28 object-cover" />
                 <div className="p-3 flex-1 flex flex-col">
                   <p className="text-sm font-bold truncate" style={{ color: cs.cardTitleColor }}>{tProduct(item, "name")}</p>
-                  <p className="text-xs font-bold mt-auto pt-1" style={{ color: cs.cardPriceColor }}>{pageContent.currencySymbol}{item.price.toFixed(2)}</p>
+                  <p className="text-xs font-bold mt-auto pt-1" style={{ color: cs.cardPriceColor }}>{item.price.toFixed(2)} {pageContent.currencySymbol}</p>
                 </div>
               </a>
             ))}
@@ -529,7 +529,7 @@ export default function MenuPage() {
               <div>
                 <p className="text-xs text-white/60 font-semibold">{t(pageContent, "popularBadgeText")}</p>
                 <p className="text-xl font-extrabold text-white mt-1">{tProduct(featured[0], "name")}</p>
-                <p className="text-sm text-white/80 mt-0.5">{pageContent.currencySymbol}{featured[0].price.toFixed(2)}</p>
+                <p className="text-sm text-white/80 mt-0.5">{featured[0].price.toFixed(2)} {pageContent.currencySymbol}</p>
               </div>
             </div>
           </div>
@@ -541,7 +541,7 @@ export default function MenuPage() {
                 <img src={item.image} alt={tProduct(item, "name")} className="w-full h-24 object-cover" />
                 <div className="p-2.5 flex-1 flex flex-col">
                   <p className="text-xs font-bold truncate" style={{ color: cs.cardTitleColor }}>{tProduct(item, "name")}</p>
-                  <p className="text-[11px] font-bold mt-auto pt-0.5" style={{ color: cs.cardPriceColor }}>{pageContent.currencySymbol}{item.price.toFixed(2)}</p>
+                  <p className="text-[11px] font-bold mt-auto pt-0.5" style={{ color: cs.cardPriceColor }}>{item.price.toFixed(2)} {pageContent.currencySymbol}</p>
                 </div>
               </a>
             ))}

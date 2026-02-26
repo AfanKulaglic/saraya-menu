@@ -91,7 +91,7 @@ export default function OrderBar() {
 
             <div className="flex items-center gap-2 relative">
               <span className="font-extrabold text-xl md:text-2xl" style={{ color: textColor }}>
-                {pageContent.currencySymbol}{total.toFixed(2)}
+                {total.toFixed(2)} {pageContent.currencySymbol}
               </span>
               <ChevronRight size={18} style={{ color: subTextColor }} />
             </div>

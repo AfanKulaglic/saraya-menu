@@ -31,7 +31,7 @@ export default function RestaurantEditor() {
   };
 
   const generalFields: { key: keyof RestaurantInfo; label: string; icon: any; placeholder: string }[] = [
-    { key: "name", label: "Restaurant Name", icon: Type, placeholder: "e.g. Bella Cucina" },
+    { key: "name", label: "Restaurant Name", icon: Type, placeholder: "e.g. My Restaurant" },
     { key: "tagline", label: "Tagline", icon: FileText, placeholder: "e.g. Authentic Italian Kitchen" },
     { key: "image", label: "Hero Image URL", icon: Image, placeholder: "https://images.unsplash.com/..." },
     { key: "logo", label: "Logo Image URL", icon: Image, placeholder: "https://images.unsplash.com/..." },

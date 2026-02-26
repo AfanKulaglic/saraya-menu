@@ -161,7 +161,7 @@ export default function MenuItemCard({ product, index }: MenuItemCardProps) {
                     className="font-extrabold text-[16px] md:text-[17px] tracking-tight"
                     style={{ color: cs.cardPriceColor }}
                   >
-                    {pageContent.currencySymbol}{product.price.toFixed(2)}
+                    {product.price.toFixed(2)} {pageContent.currencySymbol}
                   </span>
                 </div>
 
@@ -356,7 +356,7 @@ export default function MenuItemCard({ product, index }: MenuItemCardProps) {
                   className="font-extrabold text-[17px] md:text-lg lg:text-xl tracking-tight"
                   style={{ color: cs.cardPriceColor }}
                 >
-                  {pageContent.currencySymbol}{product.price.toFixed(2)}
+                  {product.price.toFixed(2)} {pageContent.currencySymbol}
                 </span>
               </div>
 

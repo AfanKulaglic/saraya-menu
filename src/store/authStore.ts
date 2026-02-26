@@ -13,31 +13,7 @@ const SEED_USERS: AppUser[] = [
     email: "admin@saraya.dev",
     avatar: "👑",
     platformRole: "admin",
-    restaurantAccess: [
-      { restaurantId: "bella-cucina", role: "manager" },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "manager-01",
-    name: "Marco Rossi",
-    email: "marco@bellacucina.com",
-    avatar: "👨‍🍳",
-    platformRole: "user",
-    restaurantAccess: [
-      { restaurantId: "bella-cucina", role: "manager" },
-    ],
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: "employee-01",
-    name: "Sofia Bianchi",
-    email: "sofia@bellacucina.com",
-    avatar: "🧑‍💼",
-    platformRole: "user",
-    restaurantAccess: [
-      { restaurantId: "bella-cucina", role: "employee" },
-    ],
+    restaurantAccess: [],
     createdAt: new Date().toISOString(),
   },
 ];
@@ -197,6 +173,6 @@ export const useAuthStore = create<AuthState>()(
         );
       },
     }),
-    { name: "bella-cucina-auth" }
+    { name: "saraya-auth" }
   )
 );

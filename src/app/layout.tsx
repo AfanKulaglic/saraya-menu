@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "@/styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "Bella Cucina - Digital Menu",
+  title: "Saraya - Digital Menu",
   description: "Browse our menu, customize your order, and send it straight to the kitchen.",
 };
 

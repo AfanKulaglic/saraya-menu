@@ -694,8 +694,9 @@ export default function PageContentEditor() {
             <ColorPicker label="Title Color" value={styles.sectionTitleColor} onChange={(v) => handleStyleChange("sectionTitleColor", v)} palette={TEXT_COLORS} />
             <ColorPicker label="Subtitle Color" value={styles.sectionSubtitleColor} onChange={(v) => handleStyleChange("sectionSubtitleColor", v)} palette={TEXT_COLORS} />
             <ColorPicker label="Divider Color" value={styles.sectionDividerColor} onChange={(v) => handleStyleChange("sectionDividerColor", v)} palette={ACCENT_COLORS} />
-            <ToggleSwitch label="Show Category Icon" value={styles.sectionShowIcon} onChange={(v) => handleStyleChange("sectionShowIcon", v)} />
+            <ToggleSwitch label="Show Category Icon" value={styles.sectionShowIcon} onChange={(v) => handleStyleChange("sectionShowIcon", v)} hint="Show emoji icon next to category section titles" />
             <ToggleSwitch label="Show Divider Line" value={styles.sectionShowDivider} onChange={(v) => handleStyleChange("sectionShowDivider", v)} />
+            <ToggleSwitch label="Show Category Headers" value={styles.sectionShowHeaders} onChange={(v) => handleStyleChange("sectionShowHeaders", v)} hint="Toggle category section headers (title, subtitle, divider). When off, items display without category grouping labels." />
           </div>
         );
 
@@ -764,7 +765,7 @@ export default function PageContentEditor() {
       {/* ── Editor Panel ── */}
       <div className={clsx(
         "flex-1 min-w-0 p-5 lg:p-8 transition-all duration-300",
-        showPreview ? "xl:mr-0" : ""
+        showPreview ? "lg:mr-0" : ""
       )}>
     <div className="space-y-6">
       {/* Header */}
@@ -780,7 +781,7 @@ export default function PageContentEditor() {
           <button
             onClick={() => setShowPreview(!showPreview)}
             className={clsx(
-              "hidden xl:flex px-3 py-2 rounded-2xl border text-sm font-semibold transition items-center gap-2",
+              "hidden lg:flex px-3 py-2 rounded-2xl border text-sm font-semibold transition items-center gap-2",
               showPreview
                 ? "border-primary/20 bg-primary/5 text-primary"
                 : "border-primary/10 text-dark hover:bg-bg"
@@ -1424,7 +1425,7 @@ export default function PageContentEditor() {
       {/* ── Live Preview Panel ── */}
       {showPreview && (
         <div
-          className="hidden xl:flex flex-col shrink-0 border-l border-gray-100 bg-white sticky top-0 h-[calc(100vh-64px)] w-[420px]"
+          className="hidden lg:flex flex-col shrink-0 border-l border-gray-100 bg-white sticky top-0 h-[calc(100vh-64px)] w-[340px] xl:w-[420px]"
         >
           <LivePreview
             pageContent={form}

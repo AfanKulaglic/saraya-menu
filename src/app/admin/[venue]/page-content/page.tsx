@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Save,
   RotateCcw,
@@ -38,6 +38,7 @@ import {
   Smartphone,
   PanelRightClose,
   PanelRightOpen,
+  ChevronsUpDown,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams } from "next/navigation";
@@ -470,6 +471,8 @@ export default function PageContentEditor() {
   const [saved, setSaved] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [showPreview, setShowPreview] = useState(true);
+  const [themeSubTab, setThemeSubTab] = useState<string>("presets");
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Sync per-theme customizations from store on load
   useEffect(() => {
@@ -565,6 +568,63 @@ export default function PageContentEditor() {
     }
   };
 
+  // ─── Section visibility helpers ─────────────────────────
+  const isSectionVisible = (sectionId: string) =>
+    layout.sections.some((s) => s.id === sectionId && s.visible);
+
+  const isPromoVisible = isSectionVisible("promoBanner");
+  const isFeaturedVisible = isSectionVisible("featuredSection");
+  const isSocialProofVisible = isSectionVisible("socialProof");
+  const isFooterVisible = isSectionVisible("footer");
+  const isInfoBarVisible = isSectionVisible("infoBar");
+  const isSearchBarVisible = isSectionVisible("searchBar");
+  const isCategoryBarVisible = isSectionVisible("categoryBar");
+
+  // ─── Navigation & UX helpers ────────────────────────────
+  const isSectionModified = useCallback((section: SectionConfig) => {
+    return section.fields.some((f) => {
+      if (String(form[f.key] ?? "") !== String(defaultPageContent[f.key] ?? "")) return true;
+      if (f.bilingual) {
+        const bsKey = `${f.key}_bs` as keyof PageContent;
+        if (String((form as any)[bsKey] ?? "") !== String((defaultPageContent as any)[bsKey] ?? "")) return true;
+      }
+      return false;
+    });
+  }, [form]);
+
+  const scrollToSection = useCallback((sectionId: string, tab: "content" | "design") => {
+    if (tab === "content") {
+      setExpandedSections((prev) => new Set([...Array.from(prev), sectionId]));
+    } else {
+      setExpandedDesign((prev) => new Set([...Array.from(prev), sectionId]));
+    }
+    setTimeout(() => {
+      sectionRefs.current[sectionId]?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }, 300);
+  }, []);
+
+  const allContentExpanded = expandedSections.size === SECTIONS.length;
+  const allDesignExpanded = expandedDesign.size === DESIGN_SECTIONS.length;
+
+  const toggleExpandAll = useCallback(() => {
+    if (activeTab === "content") {
+      setExpandedSections(allContentExpanded ? new Set() : new Set(SECTIONS.map((s) => s.id)));
+    } else if (activeTab === "design") {
+      setExpandedDesign(allDesignExpanded ? new Set() : new Set(DESIGN_SECTIONS.map((s) => s.id)));
+    }
+  }, [activeTab, allContentExpanded, allDesignExpanded]);
+
+  const contentModifiedCount = SECTIONS.filter((s) => isSectionModified(s)).length;
+
+  const THEME_SUB_TABS = [
+    { id: "presets", label: "Themes", icon: Sparkles },
+    { id: "sections", label: "Sections", icon: Layers },
+    { id: "variants", label: "Variants", icon: Grid3X3 },
+    { id: "layout", label: "Layout", icon: Monitor },
+    { id: "animation", label: "Effects", icon: Zap },
+    { id: "extra", label: "Content", icon: TypeIcon },
+  ];
+
   // ─── Design section renderer ───────────────────────────
   const renderDesignFields = (sectionId: string) => {
     switch (sectionId) {
@@ -635,12 +695,14 @@ export default function PageContentEditor() {
         );
 
       case "infobar":
-        return (
+        return isInfoBarVisible ? (
           <div className="space-y-5">
             <ToggleSwitch label="Show Info Bar" value={styles.infoBarVisible} onChange={(v) => handleStyleChange("infoBarVisible", v)} hint="Toggle the welcome card below the hero" />
             <ColorPicker label="Background Color" value={styles.infoBarBgColor} onChange={(v) => handleStyleChange("infoBarBgColor", v)} palette={BG_COLORS} />
             <ColorPicker label="Text Color" value={styles.infoBarTextColor} onChange={(v) => handleStyleChange("infoBarTextColor", v)} palette={TEXT_COLORS} />
           </div>
+        ) : (
+          <p className="text-xs text-muted italic">Enable the Info Bar section in Section Order & Visibility to edit these settings.</p>
         );
 
       case "cards":
@@ -701,18 +763,21 @@ export default function PageContentEditor() {
             <ColorPicker label="Title Color" value={styles.sectionTitleColor} onChange={(v) => handleStyleChange("sectionTitleColor", v)} palette={TEXT_COLORS} />
             <ColorPicker label="Subtitle Color" value={styles.sectionSubtitleColor} onChange={(v) => handleStyleChange("sectionSubtitleColor", v)} palette={TEXT_COLORS} />
             <ColorPicker label="Divider Color" value={styles.sectionDividerColor} onChange={(v) => handleStyleChange("sectionDividerColor", v)} palette={ACCENT_COLORS} />
-            <ToggleSwitch label="Show Category Icon" value={styles.sectionShowIcon} onChange={(v) => handleStyleChange("sectionShowIcon", v)} />
+            <ToggleSwitch label="Show Category Icon" value={styles.sectionShowIcon} onChange={(v) => handleStyleChange("sectionShowIcon", v)} hint="Show emoji icon next to category section titles" />
             <ToggleSwitch label="Show Divider Line" value={styles.sectionShowDivider} onChange={(v) => handleStyleChange("sectionShowDivider", v)} />
+            <ToggleSwitch label="Show Category Headers" value={styles.sectionShowHeaders} onChange={(v) => handleStyleChange("sectionShowHeaders", v)} hint="Toggle category section headers (title, subtitle, divider). When off, items display without category grouping labels." />
           </div>
         );
 
       case "catbar":
-        return (
+        return isCategoryBarVisible ? (
           <div className="space-y-5">
             <ColorPicker label="Background Color" value={styles.categoryBarBgColor} onChange={(v) => handleStyleChange("categoryBarBgColor", v)} palette={BG_COLORS} />
             <ToggleSwitch label="Sticky on Scroll" value={styles.categoryBarSticky} onChange={(v) => handleStyleChange("categoryBarSticky", v)} hint="Keep category bar visible when scrolling" />
             <ToggleSwitch label="Show Category Icons" value={styles.categoryBarShowIcons} onChange={(v) => handleStyleChange("categoryBarShowIcons", v)} hint="Display emoji icons for categories everywhere (bar, headers, product page)" />
           </div>
+        ) : (
+          <p className="text-xs text-muted italic">Enable the Category Bar section in Section Order & Visibility to edit these settings.</p>
         );
 
       case "orderbar":
@@ -779,7 +844,7 @@ export default function PageContentEditor() {
       {/* ── Editor Panel ── */}
       <div className={clsx(
         "flex-1 min-w-0 p-5 lg:p-8 transition-all duration-300",
-        showPreview ? "xl:mr-0" : ""
+        showPreview ? "lg:mr-0" : ""
       )}>
     <div className="space-y-6">
       {/* Header */}
@@ -795,7 +860,7 @@ export default function PageContentEditor() {
           <button
             onClick={() => setShowPreview(!showPreview)}
             className={clsx(
-              "hidden xl:flex px-3 py-2 rounded-2xl border text-sm font-semibold transition items-center gap-2",
+              "hidden lg:flex px-3 py-2 rounded-2xl border text-sm font-semibold transition items-center gap-2",
               showPreview
                 ? "border-primary/20 bg-primary/5 text-primary"
                 : "border-primary/10 text-dark hover:bg-bg"
@@ -859,29 +924,112 @@ export default function PageContentEditor() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            className="bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3 flex items-center gap-3"
+            className="bg-primary/5 border border-primary/20 rounded-2xl px-4 py-2.5 flex items-center gap-3"
           >
             <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm text-dark font-medium">You have unsaved changes</span>
+            <span className="text-xs text-dark font-semibold">Unsaved changes</span>
+            <button onClick={handleSave} className="ml-auto text-xs font-bold text-primary hover:underline transition">Save now</button>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Quick Navigation ── */}
+      {(activeTab === "content" || activeTab === "design") && (
+        <div className="flex items-center gap-2">
+          <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
+            {(activeTab === "content" ? SECTIONS : DESIGN_SECTIONS).map((section) => {
+              const isActive = activeTab === "content"
+                ? expandedSections.has(section.id)
+                : expandedDesign.has(section.id);
+              const isModified = activeTab === "content" && isSectionModified(section as SectionConfig);
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => scrollToSection(section.id, activeTab)}
+                  className={clsx(
+                    "shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all border whitespace-nowrap",
+                    isActive
+                      ? "bg-primary/10 border-primary/20 text-primary"
+                      : "bg-white border-gray-100 text-muted hover:text-dark hover:border-gray-200"
+                  )}
+                >
+                  <span className="flex items-center gap-1.5">
+                    {section.title}
+                    {isModified && <span className="w-1.5 h-1.5 rounded-full bg-primary" />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <button
+            onClick={toggleExpandAll}
+            className="shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-bold text-muted hover:text-dark bg-white hover:bg-gray-50 transition border border-gray-100 flex items-center gap-1"
+          >
+            <ChevronsUpDown size={12} />
+            <span className="hidden sm:inline">{(activeTab === "content" ? allContentExpanded : allDesignExpanded) ? "Collapse" : "Expand"}</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── Theme Sub-Navigation ── */}
+      {activeTab === "themes" && (
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-0.5">
+          {THEME_SUB_TABS.map((st) => (
+            <button
+              key={st.id}
+              onClick={() => setThemeSubTab(st.id)}
+              className={clsx(
+                "shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all border flex items-center gap-1.5",
+                themeSubTab === st.id
+                  ? "bg-primary/10 border-primary/20 text-primary shadow-sm"
+                  : "bg-white border-gray-100 text-muted hover:text-dark hover:border-gray-200"
+              )}
+            >
+              <st.icon size={13} />
+              {st.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════ */}
       {/* TEXT CONTENT TAB                       */}
       {/* ═══════════════════════════════════════ */}
       {activeTab === "content" && (
         <div className="space-y-3">
+          {/* Section customization progress */}
+          {contentModifiedCount > 0 && (
+            <div className="flex items-center gap-3 px-1">
+              <div className="flex items-center gap-1.5 text-xs text-muted shrink-0">
+                <span className="font-bold text-primary">{contentModifiedCount}</span>
+                <span>of {SECTIONS.length} customized</span>
+              </div>
+              <div className="flex-1 h-1.5 bg-bg rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-primary to-amber-500 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(contentModifiedCount / SECTIONS.length) * 100}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                />
+              </div>
+            </div>
+          )}
+
           {SECTIONS.map((section, sIdx) => {
             const isExpanded = expandedSections.has(section.id);
+            const isModified = isSectionModified(section);
             const Icon = section.icon;
             return (
               <motion.div
                 key={section.id}
+                ref={(el: HTMLDivElement | null) => { sectionRefs.current[section.id] = el; }}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: sIdx * 0.04, duration: 0.3 }}
-                className="bg-white rounded-2xl shadow-soft overflow-hidden border border-primary/5"
+                className={clsx(
+                  "bg-white rounded-2xl shadow-soft overflow-hidden border transition-colors",
+                  isModified ? "border-primary/20" : "border-primary/5"
+                )}
               >
                 <button
                   onClick={() => toggleSection(section.id)}
@@ -894,7 +1042,12 @@ export default function PageContentEditor() {
                     <Icon size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[15px] font-extrabold text-dark">{section.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-[15px] font-extrabold text-dark">{section.title}</h3>
+                      {isModified && (
+                        <span className="px-1.5 py-0.5 rounded-md bg-primary/10 text-[9px] font-bold text-primary uppercase tracking-wide">Edited</span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted mt-0.5">{section.description}</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
@@ -1034,6 +1187,7 @@ export default function PageContentEditor() {
             return (
               <motion.div
                 key={section.id}
+                ref={(el: HTMLDivElement | null) => { sectionRefs.current[section.id] = el; }}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: sIdx * 0.04, duration: 0.3 }}
@@ -1085,7 +1239,30 @@ export default function PageContentEditor() {
       {activeTab === "themes" && (
         <div className="space-y-6">
 
+          {/* Active theme summary */}
+          {(() => {
+            const at = THEME_PRESETS.find((t) => t.id === layout.activeTheme);
+            return at ? (
+              <div className="bg-gradient-to-r from-primary/5 to-amber-50/50 rounded-2xl p-4 border border-primary/10 flex items-center gap-4">
+                <div className="flex gap-1.5 shrink-0">
+                  <div className="w-8 h-8 rounded-lg border border-gray-200" style={{ backgroundColor: at.preview.bg }} />
+                  <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: at.preview.accent }} />
+                  <div className="w-8 h-8 rounded-lg border border-gray-200" style={{ backgroundColor: at.preview.card }} />
+                  <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: at.preview.text }} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-extrabold text-dark flex items-center gap-2">
+                    {at.name}
+                    <span className="px-2 py-0.5 rounded-full bg-primary/10 text-[10px] font-bold text-primary">Active Theme</span>
+                  </p>
+                  <p className="text-[11px] text-muted truncate">{at.description}</p>
+                </div>
+              </div>
+            ) : null;
+          })()}
+
           {/* ─── Theme Presets ─────────────────── */}
+          {themeSubTab === "presets" && (
           <div className="bg-white rounded-2xl shadow-soft border border-primary/5 overflow-hidden">
             <div className="p-5 border-b border-bg">
               <div className="flex items-center gap-3">
@@ -1169,8 +1346,10 @@ export default function PageContentEditor() {
               })}
             </div>
           </div>
+          )}
 
           {/* ─── Section Order & Visibility ───── */}
+          {themeSubTab === "sections" && (
           <div className="bg-white rounded-2xl shadow-soft border border-primary/5 overflow-hidden">
             <div className="p-5 border-b border-bg">
               <div className="flex items-center gap-3">
@@ -1271,8 +1450,10 @@ export default function PageContentEditor() {
               })}
             </div>
           </div>
+          )}
 
           {/* ─── Section Variants ─────────────── */}
+          {themeSubTab === "variants" && (
           <div className="bg-white rounded-2xl shadow-soft border border-primary/5 overflow-hidden">
             <div className="p-5 border-b border-bg">
               <div className="flex items-center gap-3">
@@ -1293,25 +1474,31 @@ export default function PageContentEditor() {
                 { value: "split", label: "Split" },
                 { value: "overlay-full", label: "Full Overlay" },
               ]} />
-              <OptionSelector label="Info Bar Style" value={layout.infoBarVariant} onChange={(v) => setLayout((p) => ({ ...p, infoBarVariant: v }))} options={[
-                { value: "card", label: "Card" },
-                { value: "inline", label: "Inline" },
-                { value: "floating", label: "Floating" },
-                { value: "banner", label: "Banner" },
-              ]} />
-              <OptionSelector label="Search Bar Style" value={layout.searchBarVariant} onChange={(v) => setLayout((p) => ({ ...p, searchBarVariant: v }))} options={[
-                { value: "default", label: "Default" },
-                { value: "minimal", label: "Minimal" },
-                { value: "pill", label: "Pill" },
-                { value: "hidden", label: "Hidden" },
-              ]} />
-              <OptionSelector label="Category Bar Style" value={layout.categoryBarVariant} onChange={(v) => setLayout((p) => ({ ...p, categoryBarVariant: v }))} options={[
-                { value: "scroll", label: "Scroll" },
-                { value: "pills", label: "Pills" },
-                { value: "underline", label: "Underline" },
-                { value: "grid", label: "Grid" },
-                { value: "minimal", label: "Minimal" },
-              ]} />
+              {isInfoBarVisible && (
+                <OptionSelector label="Info Bar Style" value={layout.infoBarVariant} onChange={(v) => setLayout((p) => ({ ...p, infoBarVariant: v }))} options={[
+                  { value: "card", label: "Card" },
+                  { value: "inline", label: "Inline" },
+                  { value: "floating", label: "Floating" },
+                  { value: "banner", label: "Banner" },
+                ]} />
+              )}
+              {isSearchBarVisible && (
+                <OptionSelector label="Search Bar Style" value={layout.searchBarVariant} onChange={(v) => setLayout((p) => ({ ...p, searchBarVariant: v }))} options={[
+                  { value: "default", label: "Default" },
+                  { value: "minimal", label: "Minimal" },
+                  { value: "pill", label: "Pill" },
+                  { value: "hidden", label: "Hidden" },
+                ]} />
+              )}
+              {isCategoryBarVisible && (
+                <OptionSelector label="Category Bar Style" value={layout.categoryBarVariant} onChange={(v) => setLayout((p) => ({ ...p, categoryBarVariant: v }))} options={[
+                  { value: "scroll", label: "Scroll" },
+                  { value: "pills", label: "Pills" },
+                  { value: "underline", label: "Underline" },
+                  { value: "grid", label: "Grid" },
+                  { value: "minimal", label: "Minimal" },
+                ]} />
+              )}
               <OptionSelector label="Menu Content Style" value={layout.menuContentVariant} onChange={(v) => setLayout((p) => ({ ...p, menuContentVariant: v }))} options={[
                 { value: "sections", label: "Sections" },
                 { value: "grid", label: "Grid" },
@@ -1325,28 +1512,36 @@ export default function PageContentEditor() {
                 { value: "fab", label: "FAB Button" },
                 { value: "minimal", label: "Minimal" },
               ]} />
-              <OptionSelector label="Promo Banner Style" value={layout.promoBannerVariant} onChange={(v) => setLayout((p) => ({ ...p, promoBannerVariant: v }))} options={[
-                { value: "ribbon", label: "Ribbon" },
-                { value: "card", label: "Card" },
-                { value: "floating", label: "Floating" },
-                { value: "marquee", label: "Marquee" },
-              ]} />
-              <OptionSelector label="Featured Section Style" value={layout.featuredVariant} onChange={(v) => setLayout((p) => ({ ...p, featuredVariant: v }))} options={[
-                { value: "carousel", label: "Carousel" },
-                { value: "highlight", label: "Highlight" },
-                { value: "banner", label: "Banner" },
-              ]} />
-              <OptionSelector label="Social Proof Style" value={layout.socialProofVariant} onChange={(v) => setLayout((p) => ({ ...p, socialProofVariant: v }))} options={[
-                { value: "stars", label: "Stars" },
-                { value: "testimonial", label: "Testimonial" },
-                { value: "counter", label: "Counter" },
-              ]} />
-              <OptionSelector label="Footer Style" value={layout.footerVariant} onChange={(v) => setLayout((p) => ({ ...p, footerVariant: v }))} options={[
-                { value: "simple", label: "Simple" },
-                { value: "detailed", label: "Detailed" },
-                { value: "minimal", label: "Minimal" },
-                { value: "branded", label: "Branded" },
-              ]} />
+              {isPromoVisible && (
+                <OptionSelector label="Promo Banner Style" value={layout.promoBannerVariant} onChange={(v) => setLayout((p) => ({ ...p, promoBannerVariant: v }))} options={[
+                  { value: "ribbon", label: "Ribbon" },
+                  { value: "card", label: "Card" },
+                  { value: "floating", label: "Floating" },
+                  { value: "marquee", label: "Marquee" },
+                ]} />
+              )}
+              {isFeaturedVisible && (
+                <OptionSelector label="Featured Section Style" value={layout.featuredVariant} onChange={(v) => setLayout((p) => ({ ...p, featuredVariant: v }))} options={[
+                  { value: "carousel", label: "Carousel" },
+                  { value: "highlight", label: "Highlight" },
+                  { value: "banner", label: "Banner" },
+                ]} />
+              )}
+              {isSocialProofVisible && (
+                <OptionSelector label="Social Proof Style" value={layout.socialProofVariant} onChange={(v) => setLayout((p) => ({ ...p, socialProofVariant: v }))} options={[
+                  { value: "stars", label: "Stars" },
+                  { value: "testimonial", label: "Testimonial" },
+                  { value: "counter", label: "Counter" },
+                ]} />
+              )}
+              {isFooterVisible && (
+                <OptionSelector label="Footer Style" value={layout.footerVariant} onChange={(v) => setLayout((p) => ({ ...p, footerVariant: v }))} options={[
+                  { value: "simple", label: "Simple" },
+                  { value: "detailed", label: "Detailed" },
+                  { value: "minimal", label: "Minimal" },
+                  { value: "branded", label: "Branded" },
+                ]} />
+              )}
               <OptionSelector label="Product Page Style" value={layout.productPageVariant} onChange={(v) => setLayout((p) => ({ ...p, productPageVariant: v }))} options={[
                 { value: "classic", label: "Classic" },
                 { value: "minimal", label: "Minimal" },
@@ -1356,8 +1551,10 @@ export default function PageContentEditor() {
               ]} />
             </div>
           </div>
+          )}
 
           {/* ─── Page Layout & Typography ─────── */}
+          {themeSubTab === "layout" && (
           <div className="bg-white rounded-2xl shadow-soft border border-primary/5 overflow-hidden">
             <div className="p-5 border-b border-bg">
               <div className="flex items-center gap-3">
@@ -1398,8 +1595,10 @@ export default function PageContentEditor() {
               ]} />
             </div>
           </div>
+          )}
 
           {/* ─── Animation & Spacing ─────────── */}
+          {themeSubTab === "animation" && (
           <div className="bg-white rounded-2xl shadow-soft border border-primary/5 overflow-hidden">
             <div className="p-5 border-b border-bg">
               <div className="flex items-center gap-3">
@@ -1432,8 +1631,10 @@ export default function PageContentEditor() {
               ]} />
             </div>
           </div>
+          )}
 
           {/* ─── Extra Section Content ────────── */}
+          {themeSubTab === "extra" && (
           <div className="bg-white rounded-2xl shadow-soft border border-primary/5 overflow-hidden">
             <div className="p-5 border-b border-bg">
               <div className="flex items-center gap-3">
@@ -1447,59 +1648,81 @@ export default function PageContentEditor() {
               </div>
             </div>
             <div className="p-5 space-y-4">
-              {[
-                { key: "promoBannerText" as keyof PageContent, label: "Promo Banner Text", bilingual: true },
-                { key: "promoBannerSubtext" as keyof PageContent, label: "Promo Banner Subtext", bilingual: true },
-                { key: "featuredSectionTitle" as keyof PageContent, label: "Featured Section Title", bilingual: true },
-                { key: "featuredSectionSubtitle" as keyof PageContent, label: "Featured Section Subtitle", bilingual: true },
-                { key: "socialProofText" as keyof PageContent, label: "Social Proof Text", bilingual: true },
-                { key: "socialProofRating" as keyof PageContent, label: "Social Proof Rating", bilingual: false },
-                { key: "socialProofCount" as keyof PageContent, label: "Social Proof Count", bilingual: true },
-                { key: "footerText" as keyof PageContent, label: "Footer Text", bilingual: true },
-                { key: "footerSubtext" as keyof PageContent, label: "Footer Subtext", bilingual: true },
-              ].map((field) => {
-                const bsKey = `${field.key}_bs` as keyof PageContent;
-                return (
-                <div key={field.key}>
-                  <label className="block text-xs font-semibold text-dark mb-1.5">{field.label}</label>
-                  <div className="space-y-1.5">
-                    <div className="relative">
-                      {field.bilingual && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-muted/60">🇬🇧</span>}
-                      <input
-                        type="text"
-                        value={String(form[field.key] ?? "")}
-                        onChange={(e) => handleChange(field.key, e.target.value)}
-                        className={`w-full ${field.bilingual ? 'pl-8' : 'px-4'} pr-4 py-2.5 bg-bg border border-primary/10 rounded-2xl text-sm text-dark outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition placeholder:text-muted/40`}
-                        placeholder={String(defaultPageContent[field.key])}
-                      />
-                    </div>
-                    {field.bilingual && (
-                      <BsCollapse hasValue={!!((form as any)[bsKey])}>
+              {(() => {
+                const extraFields: { key: keyof PageContent; label: string; bilingual: boolean; section: string }[] = [
+                  { key: "promoBannerText", label: "Promo Banner Text", bilingual: true, section: "promoBanner" },
+                  { key: "promoBannerSubtext", label: "Promo Banner Subtext", bilingual: true, section: "promoBanner" },
+                  { key: "featuredSectionTitle", label: "Featured Section Title", bilingual: true, section: "featuredSection" },
+                  { key: "featuredSectionSubtitle", label: "Featured Section Subtitle", bilingual: true, section: "featuredSection" },
+                  { key: "socialProofText", label: "Social Proof Text", bilingual: true, section: "socialProof" },
+                  { key: "socialProofRating", label: "Social Proof Rating", bilingual: false, section: "socialProof" },
+                  { key: "socialProofCount", label: "Social Proof Count", bilingual: true, section: "socialProof" },
+                  { key: "footerText", label: "Footer Text", bilingual: true, section: "footer" },
+                  { key: "footerSubtext", label: "Footer Subtext", bilingual: true, section: "footer" },
+                ];
+                const visibleFields = extraFields.filter((f) => isSectionVisible(f.section));
+                if (visibleFields.length === 0) {
+                  return (
+                    <p className="text-xs text-muted italic py-2">
+                      No extra sections are currently visible. Enable sections like Promo Banner, Featured, Social Proof, or Footer in Section Order & Visibility above to edit their content here.
+                    </p>
+                  );
+                }
+                return visibleFields.map((field) => {
+                  const bsKey = `${field.key}_bs` as keyof PageContent;
+                  return (
+                    <div key={field.key}>
+                      <label className="block text-xs font-semibold text-dark mb-1.5">{field.label}</label>
+                      <div className="space-y-1.5">
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-muted/60">🇧🇦</span>
+                          {field.bilingual && <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-muted/60">🇬🇧</span>}
                           <input
                             type="text"
-                            value={String((form as any)[bsKey] ?? "")}
-                            onChange={(e) => handleChange(bsKey, e.target.value)}
-                            className="w-full pl-8 pr-4 py-2.5 bg-bg border border-blue-200/30 rounded-2xl text-sm text-dark outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 focus:bg-white transition placeholder:text-muted/40"
-                            placeholder={`${field.label} (Bosnian)`}
+                            value={String(form[field.key] ?? "")}
+                            onChange={(e) => handleChange(field.key, e.target.value)}
+                            className={`w-full ${field.bilingual ? 'pl-8' : 'px-4'} pr-4 py-2.5 bg-bg border border-primary/10 rounded-2xl text-sm text-dark outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary focus:bg-white transition placeholder:text-muted/40`}
+                            placeholder={String(defaultPageContent[field.key])}
                           />
                         </div>
-                      </BsCollapse>
-                    )}
-                  </div>
+                        {field.bilingual && (
+                          <BsCollapse hasValue={!!((form as any)[bsKey])}>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-muted/60">🇧🇦</span>
+                              <input
+                                type="text"
+                                value={String((form as any)[bsKey] ?? "")}
+                                onChange={(e) => handleChange(bsKey, e.target.value)}
+                                className="w-full pl-8 pr-4 py-2.5 bg-bg border border-blue-200/30 rounded-2xl text-sm text-dark outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-400 focus:bg-white transition placeholder:text-muted/40"
+                                placeholder={`${field.label} (Bosnian)`}
+                              />
+                            </div>
+                          </BsCollapse>
+                        )}
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
+              {/* Extra section colors — only for visible sections */}
+              {(isPromoVisible || isFooterVisible) && (
+                <div className="border-t border-bg pt-4 space-y-5">
+                  {isPromoVisible && (
+                    <>
+                      <ColorPicker label="Promo Banner Background" value={styles.promoBannerBgColor} onChange={(v) => handleStyleChange("promoBannerBgColor", v)} palette={ACCENT_COLORS} />
+                      <ColorPicker label="Promo Banner Text Color" value={styles.promoBannerTextColor} onChange={(v) => handleStyleChange("promoBannerTextColor", v)} palette={TEXT_COLORS} />
+                    </>
+                  )}
+                  {isFooterVisible && (
+                    <>
+                      <ColorPicker label="Footer Background" value={styles.footerBgColor} onChange={(v) => handleStyleChange("footerBgColor", v)} palette={BG_COLORS} />
+                      <ColorPicker label="Footer Text Color" value={styles.footerTextColor} onChange={(v) => handleStyleChange("footerTextColor", v)} palette={TEXT_COLORS} />
+                    </>
+                  )}
                 </div>
-                );
-              })}
-              {/* Extra section colors */}
-              <div className="border-t border-bg pt-4 space-y-5">
-                <ColorPicker label="Promo Banner Background" value={styles.promoBannerBgColor} onChange={(v) => handleStyleChange("promoBannerBgColor", v)} palette={ACCENT_COLORS} />
-                <ColorPicker label="Promo Banner Text Color" value={styles.promoBannerTextColor} onChange={(v) => handleStyleChange("promoBannerTextColor", v)} palette={TEXT_COLORS} />
-                <ColorPicker label="Footer Background" value={styles.footerBgColor} onChange={(v) => handleStyleChange("footerBgColor", v)} palette={BG_COLORS} />
-                <ColorPicker label="Footer Text Color" value={styles.footerTextColor} onChange={(v) => handleStyleChange("footerTextColor", v)} palette={TEXT_COLORS} />
-              </div>
+              )}
             </div>
           </div>
+          )}
 
         </div>
       )}
@@ -1509,7 +1732,7 @@ export default function PageContentEditor() {
       {/* ── Live Preview Panel ── */}
       {showPreview && (
         <div
-          className="hidden xl:flex flex-col shrink-0 border-l border-gray-100 bg-white sticky top-0 h-[calc(100vh-64px)] w-[420px]"
+          className="hidden lg:flex flex-col shrink-0 border-l border-gray-100 bg-white sticky top-0 h-[calc(100vh-64px)] w-[340px] xl:w-[420px]"
         >
           <LivePreview
             pageContent={form}

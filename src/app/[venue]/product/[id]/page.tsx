@@ -313,9 +313,16 @@ export default function ProductPage() {
             "absolute bottom-0 inset-x-0 p-4 md:p-6 lg:hidden"
           )}
         >
-          {elegantMode && (
+          {elegantMode && cs.categoryBarShowIcons && (
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">{catIcon}</span>
+              <span className="text-xs font-medium text-white/70 uppercase tracking-wider">
+                {product.category}
+              </span>
+            </div>
+          )}
+          {elegantMode && !cs.categoryBarShowIcons && (
+            <div className="mb-2">
               <span className="text-xs font-medium text-white/70 uppercase tracking-wider">
                 {product.category}
               </span>
@@ -337,8 +344,8 @@ export default function ProductPage() {
             )}
             style={{ color: cs.productPriceColor }}
           >
-            {pageContent.currencySymbol}
             {product.price.toFixed(2)}
+            {" "}{pageContent.currencySymbol}
           </p>
         </div>
       </motion.div>
@@ -382,7 +389,7 @@ export default function ProductPage() {
                   color: mutedColor,
                 }}
               >
-                <span>{catIcon}</span>
+                {cs.categoryBarShowIcons && <span>{catIcon}</span>}
                 {product.category}
               </span>
               {existingInCart && (
@@ -424,8 +431,8 @@ export default function ProductPage() {
                 )}
                 style={{ color: cs.productPriceColor }}
               >
-                {pageContent.currencySymbol}
                 {product.price.toFixed(2)}
+                {" "}{pageContent.currencySymbol}
               </span>
               <span
                 className="text-xs font-medium"
@@ -600,7 +607,7 @@ export default function ProductPage() {
                           </span>
                           {option.priceAdjustment !== 0 && (
                             <span className="text-xs mt-0.5" style={{ color: isSelected ? activeBorder : cardMutedColor }}>
-                              {option.priceAdjustment > 0 ? "+" : ""}{pageContent.currencySymbol}{option.priceAdjustment.toFixed(2)}
+                              {option.priceAdjustment > 0 ? "+" : ""}{option.priceAdjustment.toFixed(2)} {pageContent.currencySymbol}
                             </span>
                           )}
                         </div>
@@ -660,7 +667,7 @@ export default function ProductPage() {
                         </span>
                         {option.priceAdjustment !== 0 && (
                           <span className="text-[11px] font-medium opacity-75 whitespace-nowrap">
-                            {option.priceAdjustment > 0 ? "+" : ""}{pageContent.currencySymbol}{option.priceAdjustment.toFixed(2)}
+                            {option.priceAdjustment > 0 ? "+" : ""}{option.priceAdjustment.toFixed(2)} {pageContent.currencySymbol}
                           </span>
                         )}
                       </motion.button>
@@ -726,7 +733,7 @@ export default function ProductPage() {
                         </span>
                         {option.priceAdjustment !== 0 && (
                           <span className="text-[9px] font-semibold whitespace-nowrap" style={{ color: isSelected ? activeBorder : cardMutedColor }}>
-                            {option.priceAdjustment > 0 ? "+" : ""}{pageContent.currencySymbol}{option.priceAdjustment.toFixed(2)}
+                            {option.priceAdjustment > 0 ? "+" : ""}{option.priceAdjustment.toFixed(2)} {pageContent.currencySymbol}
                           </span>
                         )}
                       </motion.button>
@@ -804,7 +811,7 @@ export default function ProductPage() {
                             className="text-xs font-bold"
                             style={{ color: isSelected ? "rgba(255,255,255,0.85)" : cardMutedColor }}
                           >
-                            {option.priceAdjustment > 0 ? "+" : ""}{pageContent.currencySymbol}{option.priceAdjustment.toFixed(2)}
+                            {option.priceAdjustment > 0 ? "+" : ""}{option.priceAdjustment.toFixed(2)} {pageContent.currencySymbol}
                           </span>
                         )}
                       </motion.button>
@@ -885,7 +892,7 @@ export default function ProductPage() {
                           className="text-xs font-semibold tabular-nums"
                           style={{ color: isSelected ? activeBorder : cardMutedColor }}
                         >
-                          {option.priceAdjustment > 0 ? "+" : ""}{pageContent.currencySymbol}{option.priceAdjustment.toFixed(2)}
+                          {option.priceAdjustment > 0 ? "+" : ""}{option.priceAdjustment.toFixed(2)} {pageContent.currencySymbol}
                         </span>
                       )}
                     </motion.button>
@@ -1026,8 +1033,8 @@ export default function ProductPage() {
                         color: isSelected ? activeBorder : cs.productPriceColor,
                       }}
                     >
-                      +{pageContent.currencySymbol}
-                      {addon.price.toFixed(2)}
+                      +{addon.price.toFixed(2)}
+                      {" "}{pageContent.currencySymbol}
                     </span>
                   </button>
                 );
@@ -1241,8 +1248,8 @@ export default function ProductPage() {
                   )}
                   style={{ color: cs.productPriceColor }}
                 >
-                  {pageContent.currencySymbol}
                   {item.price.toFixed(2)}
+                  {" "}{pageContent.currencySymbol}
                 </p>
               </div>
             </motion.button>
@@ -1284,12 +1291,11 @@ export default function ProductPage() {
               style={{ color: stickyMutedColor }}
             >
               <span>
-                {pageContent.currencySymbol}
-                {product.price.toFixed(2)}
+                {product.price.toFixed(2)} {pageContent.currencySymbol}
                 {variationsTotal > 0 &&
-                  ` + ${pageContent.currencySymbol}${variationsTotal.toFixed(2)}`}
+                  ` + ${variationsTotal.toFixed(2)} ${pageContent.currencySymbol}`}
                 {addonsTotal > 0 &&
-                  ` + ${pageContent.currencySymbol}${addonsTotal.toFixed(2)} extras`}
+                  ` + ${addonsTotal.toFixed(2)} ${pageContent.currencySymbol} extras`}
                 {quantity > 1 && ` × ${quantity}`}
               </span>
               <span
@@ -1298,8 +1304,8 @@ export default function ProductPage() {
                   color: stickyDark ? "#F5F5F5" : cs.productTitleColor,
                 }}
               >
-                {pageContent.currencySymbol}
                 {totalPrice.toFixed(2)}
+                {" "}{pageContent.currencySymbol}
               </span>
             </div>
           )}
@@ -1344,8 +1350,8 @@ export default function ProductPage() {
                 </motion.div>
               ) : (
                 <motion.span key="add">
-                  {t(pageContent, "addToOrderText")} — {pageContent.currencySymbol}
-                  {totalPrice.toFixed(2)}
+                  {t(pageContent, "addToOrderText")} — {totalPrice.toFixed(2)}
+                  {" "}{pageContent.currencySymbol}
                 </motion.span>
               )}
             </AnimatePresence>

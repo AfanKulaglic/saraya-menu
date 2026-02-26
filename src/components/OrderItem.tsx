@@ -75,14 +75,14 @@ export default function OrderItem({ item, index = 0 }: OrderItemProps) {
                   className="text-[10px] md:text-[11px] px-1.5 py-0.5 rounded-md font-medium"
                   style={{ backgroundColor: cardSurface, color: cardMuted }}
                 >
-                  {sv.optionLabel}{sv.priceAdjustment > 0 ? ` +${pageContent.currencySymbol}${sv.priceAdjustment.toFixed(2)}` : ''}
+                  {sv.optionLabel}{sv.priceAdjustment > 0 ? ` +${sv.priceAdjustment.toFixed(2)} ${pageContent.currencySymbol}` : ''}
                 </span>
               ))}
             </div>
           )}
 
           <p className="font-extrabold text-base md:text-lg mt-1" style={{ color: accent }}>
-            {pageContent.currencySymbol}{(item.price * item.quantity).toFixed(2)}
+            {(item.price * item.quantity).toFixed(2)} {pageContent.currencySymbol}
           </p>
 
           {/* Quantity controls */}
@@ -120,7 +120,7 @@ export default function OrderItem({ item, index = 0 }: OrderItemProps) {
             {/* Per-item price when qty > 1 */}
             {item.quantity > 1 && (
               <span className="text-[11px] ml-2" style={{ color: cardMuted }}>
-                {pageContent.currencySymbol}{item.price.toFixed(2)} each
+                {item.price.toFixed(2)} {pageContent.currencySymbol} each
               </span>
             )}
           </div>

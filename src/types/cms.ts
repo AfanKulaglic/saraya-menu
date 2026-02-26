@@ -252,6 +252,7 @@ export interface ComponentStyles {
   sectionSubtitleColor: string;
   sectionShowDivider: boolean;
   sectionShowIcon: boolean;
+  sectionShowHeaders: boolean;
   sectionDividerColor: string;
 
   // ── Category Bar ──

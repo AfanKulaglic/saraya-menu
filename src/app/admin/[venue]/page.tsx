@@ -62,8 +62,6 @@ const ROLE_CONFIG: Record<RestaurantRole, { label: string; desc: string; color: 
 // Hardcoded passwords for the simulated login
 const HARDCODED_PASSWORDS: Record<string, string> = {
   "admin@saraya.dev": "admin123",
-  "marco@bellacucina.com": "marco123",
-  "sofia@bellacucina.com": "sofia123",
 };
 
 export default function VenueRolePicker() {

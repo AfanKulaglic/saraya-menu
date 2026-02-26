@@ -19,7 +19,7 @@ export const useLanguageStore = create<LanguageState>()(
         set({ language: get().language === "en" ? "bs" : "en" }),
     }),
     {
-      name: "bella-cucina-language",
+      name: "saraya-language",
     }
   )
 );

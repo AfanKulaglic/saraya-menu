@@ -290,7 +290,7 @@ export default function ProductsEditor() {
   return (
     <div className="flex gap-0">
       {/* ── Editor Panel ── */}
-      <div className={clsx("flex-1 min-w-0 p-5 lg:p-8 transition-all duration-300", showPreview ? "xl:mr-0" : "")}>
+      <div className={clsx("flex-1 min-w-0 p-5 lg:p-8 transition-all duration-300", showPreview ? "lg:mr-0" : "")}>
       {/* ───────────── Header ───────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
@@ -301,7 +301,7 @@ export default function ProductsEditor() {
           <button
             onClick={() => setShowPreview(!showPreview)}
             className={clsx(
-              "hidden xl:flex px-3 py-2 rounded-2xl border text-sm font-semibold transition items-center gap-2",
+              "hidden lg:flex px-3 py-2 rounded-2xl border text-sm font-semibold transition items-center gap-2",
               showPreview
                 ? "border-primary/20 bg-primary/5 text-primary"
                 : "border-primary/10 text-dark hover:bg-bg"
@@ -945,7 +945,7 @@ export default function ProductsEditor() {
 
       {/* ── Live Preview Panel ── */}
       {showPreview && (
-        <div className="hidden xl:flex flex-col shrink-0 border-l border-gray-100 bg-white sticky top-0 h-[calc(100vh-64px)] w-[420px]">
+        <div className="hidden lg:flex flex-col shrink-0 border-l border-gray-100 bg-white sticky top-0 h-[calc(100vh-64px)] w-[340px] xl:w-[420px]">
           <LivePreview
             pageContent={pageContent}
             componentStyles={componentStyles}

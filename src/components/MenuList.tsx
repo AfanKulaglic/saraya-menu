@@ -163,7 +163,7 @@ export default function MenuList({
   // Single category / filtered view
   return (
     <div className="mb-6 pt-2">
-      {categoryName && (
+      {categoryName && cs.sectionShowHeaders && (
         <div className={clsx("px-4 md:px-6 lg:px-8 mb-4", centered && "text-center")}>
           <div className={clsx("flex items-center gap-3", centered && "justify-center")}>
             {cs.categoryBarShowIcons && cs.sectionShowIcon && (

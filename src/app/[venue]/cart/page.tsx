@@ -170,7 +170,7 @@ export default function CartPage() {
                           {item.quantity}× {item.name}
                         </span>
                         <span className="font-semibold" style={{ color: titleColor }}>
-                          {pageContent.currencySymbol}{(item.price * item.quantity).toFixed(2)}
+                          {(item.price * item.quantity).toFixed(2)} {pageContent.currencySymbol}
                         </span>
                       </div>
                     ))}
@@ -182,7 +182,7 @@ export default function CartPage() {
                   {/* Subtotal */}
                   <div className="flex justify-between text-sm">
                     <span style={{ color: cardMuted }}>Subtotal ({count} items)</span>
-                    <span className="font-semibold" style={{ color: titleColor }}>{pageContent.currencySymbol}{total.toFixed(2)}</span>
+                    <span className="font-semibold" style={{ color: titleColor }}>{total.toFixed(2)} {pageContent.currencySymbol}</span>
                   </div>
 
                   {/* Service note */}
@@ -197,7 +197,7 @@ export default function CartPage() {
                   <div className="mt-4 flex justify-between items-baseline">
                     <span className="text-base md:text-lg font-extrabold" style={{ color: titleColor }}>Total</span>
                     <span className="text-2xl md:text-3xl font-extrabold" style={{ color: accent }}>
-                      {pageContent.currencySymbol}{total.toFixed(2)}
+                      {total.toFixed(2)} {pageContent.currencySymbol}
                     </span>
                   </div>
                 </div>
@@ -231,7 +231,7 @@ export default function CartPage() {
             >
               <span>{t(pageContent, "placeOrderText")}</span>
               <span className="px-3 py-0.5 rounded-full text-sm" style={{ backgroundColor: "rgba(255,255,255,0.2)" }}>
-                {pageContent.currencySymbol}{total.toFixed(2)}
+                {total.toFixed(2)} {pageContent.currencySymbol}
               </span>
             </motion.button>
           </Link>

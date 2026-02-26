@@ -24,7 +24,7 @@ export default function VenueLayout({ children }: { children: React.ReactNode })
   const pathname = typeof window !== "undefined" ? window.location.pathname : "";
 
   // Check if we're on the venue's role picker page (no sub-route)
-  // e.g. /admin/bella-cucina (exactly 2 segments after splitting)
+  // e.g. /admin/my-venue (exactly 2 segments after splitting)
   const isRolePickerPage = (() => {
     const segments = pathname.split("/").filter(Boolean);
     return segments.length === 2; // ['admin', 'venue-slug']

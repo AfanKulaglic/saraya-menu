@@ -14,6 +14,6 @@ export const useAdminStore = create<AdminState>()(
       darkMode: false,
       toggleDarkMode: () => set((s) => ({ darkMode: !s.darkMode })),
     }),
-    { name: "bella-cucina-admin" }
+    { name: "saraya-admin" }
   )
 );

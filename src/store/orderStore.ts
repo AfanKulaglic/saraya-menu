@@ -52,6 +52,6 @@ export const useOrderStore = create<OrderState>()(
 
       clearAllOrders: () => set({ orders: [] }),
     }),
-    { name: "bella-cucina-orders" }
+    { name: "saraya-orders" }
   )
 );

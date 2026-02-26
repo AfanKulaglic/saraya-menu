@@ -1,34 +1,23 @@
-// ─── Supabase Client Configuration ────────────────────────────────────────
-// This file sets up the Supabase client for use throughout the application.
-// It provides both a browser client (for client components) and typed helpers.
-//
-// SETUP:
-//   1. Install: npm install @supabase/supabase-js @supabase/ssr
-//   2. Add to .env.local:
-//        NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-//        NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-//   3. Import from this file in your components/stores
+import { createClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/supabase';
 
-import { createBrowserClient } from "@supabase/ssr";
-import type { Database } from "./database.types";
+// ─── Browser (client-side) Supabase client ──────────────
+// Uses the anon key — RLS policies enforce authorization.
+// Safe to use in React components and client-side stores.
 
-// ─── Browser Client (for "use client" components) ─────────────────────────
-// This client uses the anon key and respects RLS policies.
-// It automatically handles auth token refresh.
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-export function createClient() {
-  return createBrowserClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing Supabase environment variables. ' +
+    'Copy .env.example to .env.local and fill in your project credentials.'
   );
 }
 
-// Singleton for convenience (most components just need one instance)
-let _client: ReturnType<typeof createClient> | null = null;
-
-export function getSupabase() {
-  if (!_client) {
-    _client = createClient();
-  }
-  return _client;
-}
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+});

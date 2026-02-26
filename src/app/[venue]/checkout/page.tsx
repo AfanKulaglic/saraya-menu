@@ -425,7 +425,7 @@ export default function CheckoutPage() {
                       <p className="text-[11px]" style={{ color: cardMuted }}>Qty: {item.quantity}</p>
                     </div>
                     <span className="text-sm font-bold shrink-0" style={{ color: titleColor }}>
-                      {pageContent.currencySymbol}{(item.price * item.quantity).toFixed(2)}
+                      {(item.price * item.quantity).toFixed(2)} {pageContent.currencySymbol}
                     </span>
                   </div>
                 ))}
@@ -447,7 +447,7 @@ export default function CheckoutPage() {
               <div className="flex justify-between items-baseline pt-1">
                 <span className="text-base md:text-lg font-extrabold" style={{ color: titleColor }}>Total</span>
                 <span className="text-2xl md:text-3xl font-extrabold" style={{ color: accent }}>
-                  {pageContent.currencySymbol}{total.toFixed(2)}
+                  {total.toFixed(2)} {pageContent.currencySymbol}
                 </span>
               </div>
             </div>
@@ -478,7 +478,7 @@ export default function CheckoutPage() {
             >
               <MapPin size={12} style={{ color: accent }} />
               <span>
-                Sending to <strong style={{ color: titleColor }}>Table {tableNumber}</strong> · {count} item{count !== 1 ? "s" : ""} · <strong style={{ color: accent }}>{pageContent.currencySymbol}{total.toFixed(2)}</strong>
+                Sending to <strong style={{ color: titleColor }}>Table {tableNumber}</strong> · {count} item{count !== 1 ? "s" : ""} · <strong style={{ color: accent }}>{total.toFixed(2)} {pageContent.currencySymbol}</strong>
               </span>
             </motion.div>
           )}
